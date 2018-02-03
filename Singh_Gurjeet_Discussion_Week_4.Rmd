@@ -1,0 +1,120 @@
+---
+title: "Predict_413_Discussion_Week_4"
+author: "Singh, Gurjeet"
+date: "February 2, 2018"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+library(forecast)
+library(ggplot2)
+options(scipen = 999)
+```
+
+\pagebreak
+
+## 1. Introduction
+
+For this week's discussion, we build an Auto Arima model as well as ETS model and test the performance of each model. We again run these two models on training and test dataset. 
+
+## 2. Data
+
+For this week's discussion, I am using the same dataset (U.S Air Carrier Traffic Statistics – Revenue Passenger Miles) from the last week. The figure below shows that this data has strong seasonality within each year. Along with the seasonality, there is also an upward trend to it. We notice that every summer there’s high traffic i.e. peak times. During the months of January and February, we see a dip in the traffic. This makes sense because a lot of people are back to their normal routine after the holidays. Therefore, not many people are travel in those months. \newline
+```{r fig.height=4, fig.width=7}
+#Import the data
+US.air.traffic  <- read.csv("us-air-carrier-traffic-statistic.csv")
+colnames(US.air.traffic) <- c("YearMonth", "Revenue_Miles")
+autoplot(ts(US.air.traffic[,"Revenue_Miles"], 
+              frequency = 12)) +  
+  ggtitle(paste0("U.S. Air ",
+                   "Carrier Traffic Statistics ",
+                   "- Revenue Passenger Miles")) +
+  xlab("Year")+
+  ylab("Miles")+
+  theme_bw()
+```
+
+### 2.1 Split Data - Training/Test set
+
+We split the data into the training set and test set. As per the requirement, we will hold out only 6 months of data for the test. \newline
+
+```{r }
+# #Split the data into training set and test set
+data.ts<-ts(US.air.traffic[,"Revenue_Miles"], frequency=12)
+train.ts<-ts(US.air.traffic[1:193,"Revenue_Miles"],end=c(2012,2),frequency=12)
+test.ts<-ts(US.air.traffic[194:199,"Revenue_Miles"],start=c(2012,3),frequency=12)
+```
+
+## 3. Model
+
+### 3.1 Auto Models - Arima & ETS Full Data
+
+The table below shows the metrics of each model. We notice that Auto Arima model performed better and is the clear winner here. All the seven metrics are better for Auto Arima model.\newline
+
+```{r Arima_ETS_Models}
+#Auto Arima
+traffic.arima <- auto.arima(data.ts)
+ta.model.mets <- cbind("AIC" = traffic.arima$aic, "AICc"=traffic.arima$aicc,
+                       "BIC" =traffic.arima$bic)
+#ETS AUTO Model
+traffic.ets <- ets(data.ts)
+te.model.mets <- cbind("AIC" = traffic.ets$aic, "AICc"=traffic.ets$aicc,
+                       "BIC" =traffic.ets$bic)
+aa.model <- accuracy(traffic.arima)
+est.model <- accuracy(traffic.ets)
+
+rownames(ta.model.mets) <- "Auto Arima"
+rownames(te.model.mets) <- "Auto ETS"
+rownames(aa.model) <- "Auto Arima Model"
+rownames(est.model) <- "Auto EST Model"
+
+knitr::kable(rbind(ta.model.mets, te.model.mets), 
+             caption = "AIC, AICc, BIC for Arima and ETS Models")
+knitr::kable(rbind(aa.model, est.model), 
+             caption = "Metrics for each model using full data")
+```
+
+
+### 3.2 Auto Model - Train & Test Data
+
+We create the Auto Arima and ETS models using the training dataset. The first table shows the AIC, AICc, and BIC values of each model. Again, we notice that auto Arima performed better than auto ETS model. \newline
+
+The second table also shows that auto Arima outperformed the ETS model in the test set.
+
+```{r Auto Arima Train}
+#Auto Arima using training dataset
+traffic.arima.train <- auto.arima(train.ts)
+fcast.arima.train <- forecast(traffic.arima.train, h=6)
+acc.arima <- accuracy(fcast.arima.train, test.ts)
+rownames(acc.arima) <- c("Auto Arima - Train","Auto Arima - Test")
+#Auto ETS using training dataset
+traffic.ets.train <- ets(train.ts)
+fcast.ets.train <- forecast(traffic.ets.train, h=6)
+acc.ets <- accuracy(fcast.ets.train, test.ts)
+rownames(acc.ets) <- c("Auto ETS - Train","Auto ETS - Test")
+ta.train.mets <- cbind("AIC"=traffic.arima.train$aic, "AICc"=traffic.arima.train$aicc,
+                       "BIC"=traffic.arima.train$bic)
+te.train.mets <- cbind("AIC"=traffic.ets.train$aic, "AICc"=traffic.ets.train$aicc,
+                       "BIC"=traffic.ets.train$bic)
+rownames(ta.train.mets) <- "Auto Arima - Train"
+rownames(te.train.mets) <- "Auto ETS - Train"
+knitr::kable(rbind(ta.train.mets, te.train.mets), 
+             caption = "AIC, AICc, BIC for Arima and ETS Models")
+knitr::kable(rbind(acc.arima[,1:7], acc.ets[,1:7]), 
+             caption = "Metrics for each model")
+```
+
+## 4. Conclusion
+
+In conclusion, we would select Auto Arima model because it performed better in full, training, and test dataset. \newline
+
+***
+R Code available on my GitHub page (https://github.com/Singh-Gurjeet) in the Time Series and Forecasting repository.
