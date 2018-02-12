@@ -1,0 +1,879 @@
+---
+title: "Restaurant Visitor Forecasting Project"
+author: "Singh, Gurjeet"
+date: "February 11, 2018"
+output: 
+      ioslides_presentation:
+          widescreen: true
+          fig_width: 10
+          fig_height: 5
+          fig_caption: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+```
+
+```{r 0_load_library, echo=FALSE}
+##-------------------
+# Load Libraries
+##-------------------
+options(knitr.kable.NA = '')
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(fpp)
+options(scipen = 999)
+```
+
+
+## 1. Introduction
+
+* Predict the total number of visitors.
+
+* The eight (8) data files are listed below:
+    + air_reserve.csv
+    + hpg_reserve.csv
+    + air_store_info.csv
+    + hpg_store_info.csv
+    + store_id_relation.csv
+    + air_visit_data.csv
+    + sample_submission.csv
+    + date_info.csv
+    
+For our purposes, we only used air_visit_data.csv and data_info.csv files.
+
+## 2. Data Overview
+
+```{r 1_Import_Data, echo=F}
+##-------------------
+# Import Data
+##-------------------
+
+#Import air_visit data
+visit.data.df <- 
+  read_csv("Restaurant_Visitor_Forecasting_air_visit_data.csv")
+#Loading holiday data
+date.info.df <- 
+  read_csv("Restaurant_Visitor_Forecasting_date_info.csv")
+```
+
+
+```{r 2_Data_Overview, echo=F}
+##-------------------
+# Data Exploration
+##-------------------
+sumStat <- summary(visit.data.df)
+unIds <- c(nrow(distinct(visit.data.df[,1])), 
+           NA, NA, NA, NA, NA)
+knitr::kable(cbind("unique_store_id"=unIds,sumStat),
+             caption = "Summary Statistic: Air Visit Data")
+```
+
+## 2. Data Overview (cont'd)
+
+```{r 3_Data_Overview_2, echo=F}
+variable <- names(visit.data.df)
+class <- sapply(visit.data.df, typeof)
+  class[2] <- "date"
+first_values = sapply(visit.data.df, function(x) paste0(head(x,3),  collapse = ", "))
+
+data.frame(variable, class, first_values, row.names = NULL) %>% 
+  knitr::kable(caption = "Data Structure: Air visit data with first three values")
+```
+
+## 2. Data Overview (cont'd)
+
+
+```{r 2_a_Data_Overview_hf, echo=FALSE}
+knitr::kable(summary(date.info.df),
+             caption = "Summary Statistic: Holiday Data")
+```
+
+## 2. Data Overview (cont'd)
+
+```{r 4_Data_Manipulate, echo=FALSE}
+#format the data from rows to columns
+visit.df <-   visit.data.df %>% 
+              spread(air_store_id, visitors) %>% 
+              separate(visit_date, c("Year","Month","Day"))
+
+knitr::kable(t(fBasics::basicStats(visit.df[,4:13])[c(2,3,4,5,6, 7,8),]), 
+             caption = "Summary Statistic for first ten Store")
+```
+
+## 3. Data Visualizations - Air Visit Data
+
+```{r 5_Missing_Plot_aggr, echo=FALSE} 
+##-------------------
+# Data Visualizations
+##-------------------
+#, fig.height=5, fig.width=9, fig.cap="Air Visit - Missing values of First ten stores"}
+VIM::aggr(visit.df[,4:13], 
+     prop = F, 
+     numbers = T, 
+     cex.axis = 0.45)
+```
+
+## 3. Data Visualizations - Air Visit (cont'd)
+
+```{r 6_Missing_Plot, echo=FALSE}
+VIM::matrixplot(visit.df[,4:829], interactive = F, cex.axis = 0.4)
+```
+
+## 3. Data Visualizations - Air Visit (cont'd)
+
+```{r 7_visit_plot, echo=FALSE}
+plot1 <- visit.data.df %>%
+          group_by(visit_date) %>%
+          summarise(all_visitors = sum(visitors)) %>%
+          ggplot(aes(visit_date,all_visitors)) +
+          geom_line(col = "dark orange") +
+          labs(y = "All visitors", x = "Date") +
+          theme_bw()
+
+
+plot2 <- visit.data.df %>%
+              ggplot(aes(visitors)) +
+              geom_vline(xintercept = 20, color = "orange") +
+              geom_histogram(fill = "blue", bins = 30, colour = "black") +
+              scale_x_log10()+
+          theme_bw()
+
+plot3 <- visit.data.df %>%
+            mutate(month = month(visit_date, label = T)) %>%
+            group_by(month) %>%
+            summarise(visits = median(visitors)) %>%
+            ggplot(aes(month, visits)) +
+            geom_col(show.legend = F, fill = "grey50", colour = "black") +
+            theme_bw() +
+            labs(x = "Month", y = "Median visitors")
+
+plot4 <- visit.data.df %>%
+          filter(visit_date > ymd("2016-04-15") & visit_date < ymd("2016-06-15")) %>% 
+          group_by(visit_date) %>%
+          summarise(all_visitors = sum(visitors)) %>%
+          ggplot(aes(visit_date,all_visitors)) +
+          geom_line() +
+          geom_smooth(method = "loess", color = "blue", span = 1/7) +
+          labs(y = "All visitors", x = "Date") + 
+          theme_bw()
+
+gridExtra::grid.arrange(plot1, plot2,plot3, plot4, layout_matrix = rbind(c(1, 1, 1),
+                        c(2, 3,3),
+                        c(4,4,4)))
+
+```
+
+## 4. Data Visualizations - Holiday Data
+
+```{r 8_holiday_plot, echo=FALSE}
+holidays <- date.info.df
+
+plot1 <- holidays %>%
+  ggplot(aes(as.factor(holiday_flg), fill = holiday_flg)) +
+  geom_bar(show.legend = F, fill = c("coral","cyan3")) +
+  xlab("Holiday Flag") +
+  theme_bw()
+  
+plot2 <- holidays %>%
+  filter(calendar_date > ymd("2016-04-15") & calendar_date < ymd("2016-06-01")) %>%
+  ggplot(aes(calendar_date, as.factor(holiday_flg), color = as.factor(holiday_flg))) +
+  geom_point(size = 2) +
+  theme(legend.position = "none") +
+  labs(x = "2016 date", y = "Holiday Flag")
+
+plot3 <- holidays %>%
+  filter(calendar_date > ymd("2017-04-15") & calendar_date < ymd("2017-06-01")) %>%
+  ggplot(aes(calendar_date,  as.factor(holiday_flg), color = as.factor(holiday_flg))) +
+  geom_point(size = 2) +
+  theme(legend.position = "none") +
+  labs(x = "2017 date", y = "Holiday Flag")
+
+gridExtra::grid.arrange(plot1, plot2,plot3, layout_matrix = rbind(c(1, 2),
+                        c(1, 3)))
+
+```
+
+## 5. Data Preparation
+
+* Approach 1: 
+    + Formatted the initial air visit data so all the stores appear in each individual columns. 
+    + Removed those 8 stores that are not part of the test set.
+    + Added the date info (holiday) data to our initial dataset.
+    + Replaced all the NAs, prior to the first value, with zero (0) for each store. 
+    + Replaced all NAs with zero (0) occurring every 7th day. 
+        + We assumed that if NA is consistent every 7th day from the first value, it means that the store is closed that day every week.
+    + Replaced all NAs with zero if those days fall on a holiday.
+    + Replaced all NAs with mean, median, linear, and exponential imputation.
+    + Converted the dataset into a time series (Each imputed dataset converted into time series data).
+    
+## 5. Data Preparation (cont'd)
+
+* Approach 2: 
+    + Formatted the initial air visit data so all the stores appear in each individual columns. 
+    + Removed those 8 stores that are not part of the test set.
+    + Added the date info (holiday) data to our initial dataset.
+    + Replaced all NAs with zero (0) occurring every 7th day. 
+        + We assumed that if NA is consistent every 7th day from the first value, it means that the store is closed that day every week.
+    + Replaced all NAs with zero if those days fall on a holiday.
+    + Replaced all NAs with median imputation.
+    + Fix the outliers in the data from the first value to the last record.
+    + Converted the dataset into a time series.
+    
+## 5. Data Preparation (cont'd)
+    
+* Approach 3: 
+    + Formatted the initial air visit data so all the stores appear in each individual columns. 
+    + Removed those 8 stores that are not part of the test set.
+    + Added the date info (holiday) data to our initial dataset.
+    + Replaced all NAs with zero (0) occurring every 7th day. 
+        + We assumed that if NA is consistent every 7th day from the first value, it means that the store is closed that day every week.
+    + Replaced all NAs with zero if those days fall on a holiday.
+    + Replaced all NAs with median imputation.
+    + Fix the outliers in the data from the first value to the last record.
+    + Converted the dataset into a time series.
+    + Split the training data further into training and test dataset with 70/30 split approach.
+    
+
+## 6. Forecasting Methods - Model: Approach 1
+
+**Approach 1 Kaggle Submission Results:**
+
+<center>
+![](Approach_1_Kaggle_Submission.PNG)
+</center>
+
+```{r 9_Data_Prep_and_Model, echo=F, eval=F, include=T}
+##-------------------
+#Modeling Approach 1
+##-------------------
+  visit.df.rm <-  visit.df[,!(
+                              names(visit.df) %in% c(
+                              "air_0ead98dd07e7a82a",
+                              "air_229d7e508d9f1b5e",
+                              "air_2703dcb33192b181",
+                              "air_b2d8bc9c88b85f96",
+                              "air_cb083b4789a8d3a2",
+                              "air_cf22e368c1a71d53",
+                              "air_d0a7bd3339c3d12a",
+                              "air_d63cfa6d6ab78446"
+                              )
+                              )]
+  
+  #combining holiday data
+  visit2.df <- as.tibble(cbind.data.frame(
+                          date.info.df[1:478,1:3],
+                          visit.df.rm[1:478,]))
+  
+  #Creating a working dataset
+  visit.working.df <- visit2.df
+  
+  #Multiple dataframe with different imputation
+  visit.mean.mean.df      <- visit.working.df[,1:6]
+  visit.mean.median.df    <- visit.working.df[,1:6]
+  visit.in.linear.df      <- visit.working.df[,1:6]
+  visit.ma.expon.df       <- visit.working.df[,1:6]
+  
+  #Imputation to remove missing values
+  for(i in 7:ncol(visit.working.df)){
+    #step1 - get all the missing values for each column
+    rowStart <- which(!is.na(visit.working.df[,i]))
+    #step2 - replace all the NA to 0 until first value encountered
+    visit.working.df[1:min(rowStart)-1,i] <- 0
+    #step3 - Get all the rows with a value.
+    actNa <- which(is.na(visit.working.df[,i]))
+    if(length(actNa) != 0){
+        #step4: Replace all the values for NA if store has NA occuring in 7th day
+               # this could mean it closes 1 day a week.
+        for(k in 1:length(actNa)){
+          if(k+1 <= length(actNa)) {
+            if(abs(actNa[k] - actNa[k+1]) == 7){
+              visit.working.df[actNa[k],i] <- 0
+            }  
+          } 
+        }
+        #Step5 - Get all the left over missing values
+        holCheckNA <- which(is.na(visit.working.df[,i]))
+        #step6: If the missing value is due to a holiday, add it as 0
+        for(l in 1:length(holCheckNA)){
+              #l<-2
+          if(visit.working.df[holCheckNA[l],3] == 1){
+            visit.working.df[holCheckNA[l],i] <- 0
+          }  
+          
+        }
+    }
+    #Step6 - Chec for final NA for imputation
+    visit.mean.mean.df[,i] <- round(imputeTS::na.mean(
+                                    as.numeric(
+                                      unlist(visit.working.df[,i])), 
+                                        option = "mean"),0)
+    visit.mean.median.df[,i] <- round(imputeTS::na.mean(
+                                    as.numeric(
+                                      unlist(visit.working.df[, i])),
+                                        option = "median"), 0)
+    visit.in.linear.df[,i] <- round(imputeTS::na.interpolation(
+                                    as.numeric(
+                                      unlist(visit.working.df[,i])),
+                                        option = "linear"),0)
+    visit.ma.expon.df[,i] <- round(imputeTS::na.ma(
+                                    as.numeric(
+                                      unlist(visit.working.df[,i])),
+                                        weighting = "exponential"),0)
+}
+colnames(visit.mean.mean.df) <- colnames(visit.working.df)
+colnames(visit.mean.median.df) <- colnames(visit.working.df)
+colnames(visit.in.linear.df) <- colnames(visit.working.df)
+colnames(visit.ma.expon.df) <- colnames(visit.working.df)
+
+#define the time series
+visit.mean.ts =as.ts(visit.mean.mean.df[, -c(1,2,3,4,5,6)], 
+                     start=c(2016,1,1), frequency=365)  
+visit.median.ts =as.ts(visit.mean.median.df[, -c(1,2,3,4,5,6)], 
+                     start=c(2016,1,1), frequency=365)  
+visit.linear.ts =as.ts(visit.in.linear.df[, -c(1,2,3,4,5,6)], 
+                     start=c(2016,1,1), frequency=365)  
+visit.expon.ts =as.ts(visit.ma.expon.df[, -c(1,2,3,4,5,6)], 
+                     start=c(2016,1,1), frequency=365)  
+
+####-----------------
+## ETS Model
+####-----------------
+
+for(i in 1:ncol(visit.mean.ts)){
+  fcast.mean.est <- round(forecast(ets(visit.mean.ts[,i]),39)$mean,0)
+  fcast.median.est <- round(forecast(ets(visit.median.ts[,i]),39)$mean,0)
+  fcast.linear.est <- round(forecast(ets(visit.linear.ts[,i]),39)$mean,0)
+  fcast.expon.est <- round(forecast(ets(visit.expon.ts[,i]),39)$mean,0)
+  if(i == 1){
+    visit.mean.fcast <- fcast.mean.est
+    visit.median.fcast <- fcast.median.est  
+    visit.linear.fcast <- fcast.linear.est  
+    visit.expon.fcast <- fcast.expon.est  
+  }
+  if(i > 1){
+    visit.mean.fcast <- cbind(visit.mean.fcast,fcast.mean.est)
+    visit.median.fcast <- cbind(visit.median.fcast,fcast.median.est)
+    visit.linear.fcast <- cbind(visit.linear.fcast,fcast.linear.est)
+    visit.expon.fcast <- cbind(visit.expon.fcast,fcast.expon.est)
+  }
+}
+colnames(visit.mean.fcast) <- colnames(visit.mean.ts)
+colnames(visit.median.fcast) <- colnames(visit.median.ts)
+colnames(visit.linear.fcast) <- colnames(visit.linear.ts)
+colnames(visit.expon.fcast) <- colnames(visit.expon.ts)
+
+#Reformat and Export Final submission file
+#Mean Imputation - EST Model
+data.result.mean <- rownames_to_column(as.tibble(visit.mean.fcast),var = "RowID")
+final_submission.mean <- as.tibble(data.result.mean %>% 
+                                mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                  to = as.Date("2017-05-31"), 
+                                                  by= 'day')) %>% 
+                                gather("StoreID","visitors",
+                                       2:ncol(data.result.mean)) %>% 
+                                unite("id",StoreID,Date, sep = "_")
+                              )[,2:3]
+write_csv(final_submission.mean, 
+          "Approach_1_Final_submission_mean_ETS_formatted.csv")
+
+#Median Imputation - EST Model
+data.result.median <- rownames_to_column(as.tibble(visit.median.fcast),var = "RowID")
+final_submission.median <- as.tibble(data.result.median %>% 
+                                     mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                       to = as.Date("2017-05-31"), 
+                                                       by= 'day')) %>% 
+                                     gather("StoreID","visitors",
+                                            2:ncol(data.result.median)) %>% 
+                                     unite("id",StoreID,Date, sep = "_")
+                            )[,2:3]
+write_csv(final_submission.median, 
+          "Approach_1_Final_submission_median_ETS_formatted.csv")
+
+#Linear Imputation - EST Model
+data.result.linear <- rownames_to_column(as.tibble(visit.linear.fcast),var = "RowID")
+final_submission.linear <- as.tibble(data.result.linear %>% 
+                                       mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                         to = as.Date("2017-05-31"), 
+                                                         by= 'day')) %>% 
+                                       gather("StoreID","visitors",
+                                              2:ncol(data.result.linear)) %>% 
+                                       unite("id",StoreID,Date, sep = "_")
+                                    )[,2:3]
+final_submission.linear$visitors[final_submission.linear$visitors <0] <- 
+  abs(final_submission.linear$visitors[final_submission.linear$visitors <0])
+
+write_csv(final_submission.linear, 
+          "Approach_1_Final_submission_linear_ETS_formatted.csv")
+
+#Exponential Imputation - EST Model
+data.result.expon <- rownames_to_column(as.tibble(visit.expon.fcast),var = "RowID")
+final_submission.expon <- as.tibble(data.result.expon %>% 
+                                      mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                        to = as.Date("2017-05-31"), 
+                                                        by= 'day')) %>% 
+                                      gather("StoreID","visitors",
+                                             2:ncol(data.result.expon)) %>% 
+                                      unite("id",StoreID,Date, sep = "_")
+                                    )[,2:3]
+final_submission.expon$visitors[final_submission.expon$visitors <0] <- 
+  abs(final_submission.expon$visitors[final_submission.expon$visitors <0])
+
+write_csv(final_submission.expon, 
+          "Approach_1_Final_submission_expon_ETS_formatted.csv")
+
+
+####-----------------
+## Auto Arima Model
+####-----------------
+
+for(i in 1:ncol(visit.mean.ts)){
+  fcast.mean.aa <- round(forecast(auto.arima(visit.mean.ts[,i]),39)$mean,0)
+  fcast.median.aa <- round(forecast(auto.arima(visit.median.ts[,i]),39)$mean,0)
+  fcast.linear.aa <- round(forecast(auto.arima(visit.linear.ts[,i]),39)$mean,0)
+  fcast.expon.aa <- round(forecast(auto.arima(visit.expon.ts[,i]),39)$mean,0)
+  if(i == 1){
+    visit.mean.fcast.aa <- fcast.mean.aa
+    visit.median.fcast.aa <- fcast.median.aa  
+    visit.linear.fcast.aa <- fcast.linear.aa  
+    visit.expon.fcast.aa <- fcast.expon.aa  
+  }
+  if(i > 1){
+    visit.mean.fcast.aa <- cbind(visit.mean.fcast.aa,fcast.mean.aa)
+    visit.median.fcast.aa <- cbind(visit.median.fcast.aa,fcast.median.aa)
+    visit.linear.fcast.aa <- cbind(visit.linear.fcast.aa,fcast.linear.aa)
+    visit.expon.fcast.aa <- cbind(visit.expon.fcast.aa,fcast.expon.aa)
+  }
+}
+
+
+colnames(visit.mean.fcast.aa) <- colnames(visit.mean.ts)
+colnames(visit.median.fcast.aa) <- colnames(visit.median.ts)
+colnames(visit.linear.fcast.aa) <- colnames(visit.linear.ts)
+colnames(visit.expon.fcast.aa) <- colnames(visit.expon.ts)
+
+
+#Mean Imputation - Auto ARIMA Model
+data.result.mean.aa <- 
+        rownames_to_column(as.tibble(visit.mean.fcast.aa),var = "RowID")
+final_submission.mean.aa <- as.tibble(data.result.mean.aa %>% 
+                                     mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                       to = as.Date("2017-05-31"), 
+                                                       by= 'day')) %>% 
+                                     gather("StoreID","visitors",
+                                            2:ncol(data.result.mean.aa)) %>% 
+                                     unite("id",StoreID,Date, sep = "_")
+                                   )[,2:3]
+write_csv(final_submission.mean.aa, 
+          "Approach_1_Final_submission_mean_ARIMA_formatted.csv")
+
+#Median Imputation - Auto ARIMA Model
+data.result.median.aa <- 
+     rownames_to_column(as.tibble(visit.median.fcast.aa),var = "RowID")
+final_submission.median.aa <- as.tibble(data.result.median.aa %>% 
+                                       mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                         to = as.Date("2017-05-31"), 
+                                                         by= 'day')) %>% 
+                                       gather("StoreID","visitors",
+                                              2:ncol(data.result.median.aa)) %>% 
+                                       unite("id",StoreID,Date, sep = "_")
+                                      )[,2:3]
+write_csv(final_submission.median.aa, 
+          "Approach_1_Final_submission_median_ARIMA_formatted.csv")
+
+#Linear Imputation - Auto ARIMA Model
+data.result.linear.aa <- 
+      rownames_to_column(as.tibble(visit.linear.fcast.aa),var = "RowID")
+final_submission.linear.aa <- as.tibble(data.result.linear.aa %>% 
+                                       mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                         to = as.Date("2017-05-31"), 
+                                                         by= 'day')) %>% 
+                                       gather("StoreID","visitors",
+                                              2:ncol(data.result.linear.aa)) %>% 
+                                       unite("id",StoreID,Date, sep = "_")
+                                      )[,2:3]
+final_submission.linear.aa$visitors[final_submission.linear.aa$visitors <0] <- 
+  abs(final_submission.linear.aa$visitors[final_submission.linear.aa$visitors <0])
+
+write_csv(final_submission.linear.aa, 
+          "Approach_1_Final_submission_linear_ARIMA_formatted.csv")
+
+#Exponential Imputation - Auto ARIMA Model
+data.result.expon.aa <- 
+      rownames_to_column(as.tibble(visit.expon.fcast.aa),var = "RowID")
+final_submission.expon.aa <- as.tibble(data.result.expon.aa %>% 
+                                      mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                        to = as.Date("2017-05-31"), 
+                                                        by= 'day')) %>% 
+                                      gather("StoreID","visitors",
+                                             2:ncol(data.result.expon.aa)) %>% 
+                                      unite("id",StoreID,Date, sep = "_")
+                                      )[,2:3]
+final_submission.expon.aa$visitors[final_submission.expon.aa$visitors <0] <- 
+  abs(final_submission.expon.aa$visitors[final_submission.expon.aa$visitors <0])
+
+write_csv(final_submission.expon.aa, 
+          "Approach_1_Final_submission_expon_ARIMA_formatted.csv")
+
+```
+
+## 6. Forecasting Methods - Model: Approach 2
+
+**Approach 2 Kaggle Submission Results:**
+
+<center>
+![](Approach_2_Kaggle_Submission.PNG)
+</center>
+
+
+
+```{r 10_Data_Prep_and_Model, echo=F, eval=F, include=T}
+##-------------------
+#Modeling Approach 2
+##-------------------
+#Import air_visit data
+visit.data.df <- 
+  read_csv("Restaurant_Visitor_Forecasting_air_visit_data.csv")
+#Loading holiday data
+date.info.df <- 
+  read_csv("Restaurant_Visitor_Forecasting_date_info.csv")
+
+#format the data from rows to columns
+visit.df <-   visit.data.df %>% 
+              spread(air_store_id, visitors) %>% 
+              separate(visit_date, c("Year","Month","Day"))
+
+  visit.df.rm <-  visit.df[,!(
+                              names(visit.df) %in% c(
+                              "air_0ead98dd07e7a82a",
+                              "air_229d7e508d9f1b5e",
+                              "air_2703dcb33192b181",
+                              "air_b2d8bc9c88b85f96",
+                              "air_cb083b4789a8d3a2",
+                              "air_cf22e368c1a71d53",
+                              "air_d0a7bd3339c3d12a",
+                              "air_d63cfa6d6ab78446"
+                              )
+                              )]
+  #combining holiday data
+  visit2.df <- as.tibble(cbind.data.frame(
+                          date.info.df[1:478,1:3],
+                          visit.df.rm[1:478,]))
+  
+  #Creating a working dataset
+  visit.working.df <- visit2.df
+
+  #Imputation to remove missing values
+ for(i in 7:ncol(visit.working.df)){
+    #step1 - get all the missing values for each column
+    rowStart <- which(!is.na(visit.working.df[,i]))
+    
+    #step3 - Get all the rows with a value.
+    actNa <- which(is.na(visit.working.df[,i]))
+    actNa <- actNa[actNa > min(rowStart)]
+    
+    if(length(actNa) != 0){
+          #step4: Replace all the values for NA if store has NA occuring in 7th day
+                 # this could mean it closes 1 day a week.
+          for(k in 1:length(actNa)){
+            if(k+1 <= length(actNa)) {
+              if(abs(actNa[k] - actNa[k+1]) == 7){
+                visit.working.df[actNa[k],i] <- 0
+              }  
+            } 
+          }
+          
+          #Step5 - Get all the left over missing values
+          holCheckNA <- which(is.na(visit.working.df[,i]))
+          holCheckNA <- holCheckNA[holCheckNA > min(rowStart)]
+          
+          #step6: If the missing value is due to a holiday, add it as 0
+          for(l in 1:length(holCheckNA)){
+                #l<-2
+            if(visit.working.df[holCheckNA[l],3] == 1){
+              visit.working.df[holCheckNA[l],i] <- 0
+            }  
+            
+          }
+    }
+    #Step6 - Chec for final NA for imputation
+    st <- min(rowStart)
+    en <- nrow(visit.working.df)
+
+     fcast.median.est <-  round(
+                            forecast(ets(
+                               tsclean(
+                                 imputeTS::na.mean(
+                                   as.numeric(
+                                     unlist(visit.working.df[st:en,i])),
+                                   option = "median"),
+                                 replace.missing = F)),39)$mean,0)
+
+
+     fcast.median.aa <- round(
+                         forecast(
+                           auto.arima(
+                             tsclean(
+                               imputeTS::na.mean(
+                                 as.numeric(
+                                   unlist(visit.working.df[st:en,i])),
+                                 option = "median"),
+                               replace.missing = F)),39)$mean,0)
+    if(i == 7){
+      #Median
+       visit.median.fcast <- fcast.median.est
+       visit.median.fcast.aa <- fcast.median.aa
+    }
+    if(i > 7){
+      #Median
+      visit.median.fcast <- cbind.data.frame(visit.median.fcast,fcast.median.est)
+      visit.median.fcast.aa <- cbind.data.frame(visit.median.fcast.aa,fcast.median.aa)
+    }
+}
+colnames(visit.median.fcast) <- colnames(visit.working.df[,7:827])
+colnames(visit.median.fcast.aa) <- colnames(visit.working.df[,7:827])
+
+####-----------------
+## ETS Model
+####-----------------
+
+#Median Imputation - EST Model
+data.result.median <- 
+    rownames_to_column(as.tibble(visit.median.fcast),var = "RowID")
+final_submission.median <- as.tibble(data.result.median %>% 
+                                     mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                       to = as.Date("2017-05-31"), 
+                                                       by= 'day')) %>% 
+                                     gather("StoreID","visitors",
+                                            2:ncol(data.result.median)) %>% 
+                                     unite("id",StoreID,Date, sep = "_")
+                            )[,2:3]
+write_csv(final_submission.median, 
+          "Approach_2_Final_submission_median_ETS_formatted.csv")
+
+####-----------------
+## Auto Arima Model
+####-----------------
+#Median Imputation -  Auto ARIMA Model
+data.result.median.aa <- 
+  rownames_to_column(as.tibble(visit.median.fcast.aa),var = "RowID")
+final_submission.median.aa <- as.tibble(data.result.median.aa %>% 
+                                       mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                         to = as.Date("2017-05-31"), 
+                                                         by= 'day')) %>% 
+                                       gather("StoreID","visitors",
+                                              2:ncol(data.result.median.aa)) %>% 
+                                       unite("id",StoreID,Date, sep = "_")
+)[,2:3]
+write_csv(final_submission.median.aa, 
+          "Approach_2_Final_submission_median_ARIMA_formatted.csv")
+
+```
+
+
+## 6. Forecasting Methods - Model: Approach 3
+
+**Approach 3 Kaggle Submission Results:**
+
+<center>
+![](Approach_3_Kaggle_Submission.PNG)
+</center>
+
+
+```{r 11_Data_Prep_and_Model, echo=F, eval=F, include=T}
+##-------------------
+#Modeling Approach 3
+##-------------------
+#Import air_visit data
+visit.data.df <- 
+  read_csv("Restaurant_Visitor_Forecasting_air_visit_data.csv")
+#Loading holiday data
+date.info.df <- 
+  read_csv("Restaurant_Visitor_Forecasting_date_info.csv")
+
+#format the data from rows to columns
+visit.df <-   visit.data.df %>% 
+              spread(air_store_id, visitors) %>% 
+              separate(visit_date, c("Year","Month","Day"))
+
+  visit.df.rm <-  visit.df[,!(
+                              names(visit.df) %in% c(
+                              "air_0ead98dd07e7a82a",
+                              "air_229d7e508d9f1b5e",
+                              "air_2703dcb33192b181",
+                              "air_b2d8bc9c88b85f96",
+                              "air_cb083b4789a8d3a2",
+                              "air_cf22e368c1a71d53",
+                              "air_d0a7bd3339c3d12a",
+                              "air_d63cfa6d6ab78446"
+                              )
+                              )]
+  #combining holiday data
+  visit2.df <- as.tibble(cbind.data.frame(
+                          date.info.df[1:478,1:3],
+                          visit.df.rm[1:478,]))
+  
+  #Creating a working dataset
+  visit.working.df <- visit2.df
+  
+  #Imputation to remove missing values
+ for(i in 7:ncol(visit.working.df)){
+    #step1 - get all the missing values for each column
+    rowStart <- which(!is.na(visit.working.df[,i]))
+    
+    #step3 - Get all the rows with a value.
+    actNa <- which(is.na(visit.working.df[,i]))
+    actNa <- actNa[actNa > min(rowStart)]
+    
+    if(length(actNa) != 0){
+          #step4: Replace all the values for NA if store has NA occuring in 7th day
+                 # this could mean it closes 1 day a week.
+          for(k in 1:length(actNa)){
+            if(k+1 <= length(actNa)) {
+              if(abs(actNa[k] - actNa[k+1]) == 7){
+                visit.working.df[actNa[k],i] <- 0
+              }  
+            } 
+          }
+          
+          #Step5 - Get all the left over missing values
+          holCheckNA <- which(is.na(visit.working.df[,i]))
+          holCheckNA <- holCheckNA[holCheckNA > min(rowStart)]
+          
+          #step6: If the missing value is due to a holiday, add it as 0
+          for(l in 1:length(holCheckNA)){
+                #l<-2
+            if(visit.working.df[holCheckNA[l],3] == 1){
+              visit.working.df[holCheckNA[l],i] <- 0
+            }  
+            
+          }
+    }
+    #Step6 - Chec for final NA for imputation
+    st <- min(rowStart)
+    en <- nrow(visit.working.df)
+
+    ## Find the best model
+    visit_per_rest <- round(tsclean(imputeTS::na.mean(as.numeric(
+                          unlist(visit.working.df[st:en,i])),
+                          option = "median"),replace.missing = F),0)
+    
+    visit.ts <- as.ts(visit_per_rest, start(2016,1,1), frequency=365)
+    train_split <- round(length(visit.ts) * 0.7)
+    
+    train.ts <- window(visit.ts, end = train_split)
+    test.ts <- window(visit.ts, start = train_split+1)
+      
+    #ETS Model 
+    fit.ETS <-  ets(train.ts)
+    acc.ets <- accuracy(fit.ETS, data=test.ts)
+    
+    #Auto Arima
+    fit.arima <- auto.arima(train.ts)
+    acc.arima <- accuracy(fit.arima, data=test.ts)
+
+    if(i == 7){
+      if((is.nan(acc.ets[6])== TRUE) & (is.nan(acc.arima[6]) == TRUE)){
+        visit.median.fcast <- round(forecast(auto.arima(visit.ts), 39)$mean,0)
+      }else if ((is.nan(acc.ets[6])== TRUE) & (is.nan(acc.arima[6]) == FALSE)){
+        visit.median.fcast <- round(forecast(ets(visit.ts), 39)$mean,0)
+      }else if ((is.nan(acc.ets[6])== FALSE) & (is.nan(acc.arima[6]) == TRUE)){
+        visit.median.fcast <- round(forecast(auto.arima(visit.ts), 39)$mean,0)
+      }else if(acc.ets[6] < acc.arima[6]){
+        visit.median.fcast <- round(forecast(ets(visit.ts), 39)$mean,0)
+      }else{
+        visit.median.fcast <- round(forecast(auto.arima(visit.ts), 39)$mean,0)
+      }
+    }
+    if(i > 7){
+      #Median
+      if((is.nan(acc.ets[6])== TRUE) & (is.nan(acc.arima[6]) == TRUE)){
+        visit.median.fcast <- 
+                cbind.data.frame(visit.median.fcast,
+                                 round(forecast(auto.arima(visit.ts), 39)$mean,0))
+      }else if ((is.nan(acc.ets[6])== TRUE) & (is.nan(acc.arima[6]) == FALSE)){
+        visit.median.fcast <- 
+                cbind.data.frame(visit.median.fcast,
+                                 round(forecast(ets(visit.ts), 39)$mean,0))
+      }else if ((is.nan(acc.ets[6])== FALSE) & (is.nan(acc.arima[6]) == TRUE)){
+        visit.median.fcast <- 
+                cbind.data.frame(visit.median.fcast,
+                                 round(forecast(auto.arima(visit.ts), 39)$mean,0))
+      }else if(acc.ets[6] < acc.arima[6]){
+        visit.median.fcast <- 
+                cbind.data.frame(visit.median.fcast,
+                                 round(forecast(ets(visit.ts), 39)$mean,0))
+      }else{
+        visit.median.fcast <- 
+                cbind.data.frame(visit.median.fcast,
+                                 round(forecast(auto.arima(visit.ts), 39)$mean,0))
+      }
+    }
+}
+colnames(visit.median.fcast) <- colnames(visit.working.df[,7:827])
+
+#Median Imputation - FINAL Export
+data.result.median <- 
+        rownames_to_column(as.tibble(visit.median.fcast),var = "RowID")
+final_submission.median <- as.tibble(data.result.median %>% 
+                                        mutate(Date = seq(from = as.Date("2017-04-23"), 
+                                                          to = as.Date("2017-05-31"), 
+                                                          by= 'day')) %>% 
+                                        gather("StoreID","visitors",
+                                               2:ncol(data.result.median)) %>% 
+                                        unite("id",StoreID,Date, sep = "_")
+                                    )[,2:3]
+write_csv(final_submission.median, 
+          "Approach_3_Final_submission_Median_AutoARIMA_ETS.csv")
+```
+
+## 7. Literature
+
+  1. Building Forecasting Models for Restaurant Owners and Managers: A Case Study
+  2. Data Mining on Time Series
+  3. Forecasting Restaurant Sales Using Multiple Regression and Box-Jenkins Analysis
+  4. A Hybrid Seasonal Autoregressive
+  5. Time-Series Forecasting: Food-Service Industry
+
+## 8. Limitations
+
+* Lack of knowledge of building models with data of multiple time-series
+* Heavily reliance on auto.arima and ets methods.
+* Excessive iterations for building forecasting models.
+
+## 9. Future Work
+
+Plan to improve my models in future by taking the following steps:
+
+1. Use the Last Observation Carried Forward approach (na.locf function from the imputeTS package) for imputation.
+2. For each time series (for each restaurant) model, capture the MASE in a variable. Take the average of the MASE and then compare the value with other models. The model that has the best average MASE value, use that as the final model.
+3. Use other forecasting methods such as Prophet, Box-Jenkins, SARIMA, SARIMAX, and Quantile Regression.
+5. Lastly, use “DoParallel” in future.
+
+## 10. Learnings
+
+* Great learning experience. 
+* Exposure on how to work with the multiple time series data.
+* Experience with Kaggle competition.
+* Great discussion with classmates.
+* Got introduced to new R-Packages such as lubridate, VIM, and imputeTS.
+
+## 11. References
+
+Kaggle Kernels and Discussion boards: (https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting)
+
+Missing Values Visualization: (http://rstudio-pubs-static.s3.amazonaws.com/4625_fa990d611f024ea69e7e2b10dd228fe7.html)
+
+
+
+
+
+
+
+
+
+
+
+
