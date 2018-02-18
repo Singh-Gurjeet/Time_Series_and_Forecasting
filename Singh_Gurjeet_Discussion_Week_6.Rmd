@@ -1,0 +1,159 @@
+---
+title: "Predict_413_Discussion_Week_6"
+author: "Singh, Gurjeet"
+date: "February 17, 2018"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+    fig_width: 9
+    fig_height: 5
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    fig_width: 9
+    fig_height: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+
+```{r load_libraries, echo=F}
+
+library(tidyverse)
+library(fpp)
+library(quantmod) # use for gathering and charting Stock data
+options(scipen = 999)
+```
+
+\pagebreak
+
+## 1. Introduction
+
+For this week's discussion, we forecast the daily adjusted closing price of our choice using time series components and at least once external regressor (i.e. transaction volume at t-1). 
+
+## 2. Data
+
+For this week's discussion, I chose ACN (Accenture) as my stock. I remember buying ACN shares for around $35 (after 15% discount) back in 2011/2012. I can't believe its stock price has gone so high.
+
+The figure below shows the Accenture stock closing price and the stock volume. Closing Price chart shows that the stock price has been increasing over the years. As expected from the stocks, there's no seasonality in the data. Looking at the volume chart, I wonder what happened in Q4 of 2013.
+
+
+```{r Import_Data, echo=F}
+
+#Download the Accenture data from Google Finance.
+K <- getSymbols("ACN", src="google", return.class = "xts", warnings = F)
+#Extract only closing price of the stock.
+ACN_Close <- ACN$ACN.Close # Get the closing rate
+#Extract only closing price of the stock.
+ACN_xreg <- ACN$ACN.Volume # Get the Volume
+#filter data for 5 years only
+ACN_Close_5yr <- ACN_Close["2013-02-16/"]
+ACN_xreg_5yr <- ACN_xreg["2013-02-16/"]
+
+p1 <- autoplot(ACN_Close_5yr) + ggtitle("Accenture Stock Closing Price") +
+        xlab("Year")+ ylab("Closing Price $") + theme_bw()
+p2 <-autoplot(ACN_xreg_5yr/1000000) + ggtitle("Accenture Stock Volume") +
+        xlab("Year")+ ylab("Volume (in millions)") + theme_bw()
+gridExtra::grid.arrange(p1,p2, layout_matrix = rbind(1,2))
+```
+
+
+## 3. Model
+
+We created two models using auto.arima with external regressor. One of the models using the stepwise selection. The other model with the non-stepwise selection. The auto.arima with stepwise selection produced an ARIMA(1,1,1) with one AR term, one MA term, and one degree of differences. The auto.arima with non-stepwise selection produced an ARIMA(2,1,2) with two AR term, two MA term, and one degree of differences.
+
+The information below shows the summary statistics of both the models. When comparing both the models using AIC and AICc, it appears that ARIMA(2,1,2) (i.e. the model with non-stepwise selection) performed better. However, when we look at other metrics such as BIC, MAPE, and MASE, it appears that ARIMA(1,1,1) performed better. Further investigation will be required to find the best model.
+\pagebreak
+
+```{r Models, echo=F}
+
+#default with xreg;
+fitACN <- auto.arima(ts(ACN_Close_5yr, frequency = 7, start = c(2013,02,16)), 
+                    xreg = ACN_xreg_5yr)
+summary(fitACN)
+
+# # with Stepwise = False
+fitACN2 <- auto.arima(ts(ACN_Close_5yr, frequency = 7, start = c(2013,02,16)), 
+                      xreg = ACN_xreg_5yr, stepwise = F, approximation = F)
+summary(fitACN2)
+```
+
+\pagebreak
+
+## 4. Forecast
+
+The figures below show the regression errors and ARIMA errors from both the fitted models. Looking at the graphs, the errors seem to resemble for both models. \newline
+
+```{r forecast, echo=F}
+
+p3 <- cbind("Regression Errors" = residuals(fitACN, type="regression"),
+      "ARIMA errors" = residuals(fitACN, type="innovation")) %>%
+        autoplot(facets=TRUE) +
+          ggtitle("Regression and ARIMA errors from the fitted model")
+
+p4 <- cbind("Regression Errors" = residuals(fitACN2, type="regression"),
+      "ARIMA errors" = residuals(fitACN2, type="innovation")) %>%
+        autoplot(facets=TRUE) + 
+        ggtitle("Regression and ARIMA errors from the fitted model w/ non-stepwise")
+gridExtra::grid.arrange(p3, p4, nrow=2)
+```
+
+
+Next, we look at the residuals from the regression with ARIMA(1,1,1) errors and the portmanteau test results. The ACF plot in the figure below shows that all the correlations except one are within the threshold limits, indicating that the residuals are behaving like white noise. The portmanteau test below returns a large p-value, also suggesting that the residuals are white noise.
+
+```{r check_residuals_fit1, echo = F}
+
+checkresiduals(fitACN)
+```
+
+Next, we look at the residuals from the regression with ARIMA(2,1,2) errors and the portmanteau test results. The ACF plot in the figure below shows that all the correlations except two are within the threshold limits, indicating that the residuals are also behaving like white noise but not better than residuals from the ARIMA(1,1,1). The portmanteau test below returns a smaller p-value, suggesting that the residuals are some white noise.
+
+```{r check_residuals_fit2, echo = F}
+checkresiduals(fitACN2)
+```
+
+
+The table below shows the metrics from each model. It seems like default auto.arima with external regression performed better. \newline
+
+```{r fcast_acc, echo=F}
+
+fcast <- forecast(fitACN, xreg = ACN_xreg_5yr)
+  acc <- accuracy(fcast)
+fcast2 <- forecast(fitACN2, xreg = ACN_xreg_5yr)
+  acc2 <- accuracy(fcast2)
+both_acc <- rbind.data.frame(acc,acc2)
+rownames(both_acc) <- c("Auto Arima","Auto Arima w/ Non-Stepwise")
+knitr::kable(both_acc, caption = "Metrics for each model")
+```
+
+
+The figure below shows the forecasts from both the models.
+
+```{r fcast_plot, echo=F}
+
+p5 <- fcast %>% 
+        autoplot() +
+        ylab("Closing Price $")
+p6 <- fcast2 %>% 
+        autoplot() + 
+        ylab("Closing Price $")
+gridExtra::grid.arrange(p5, p6, nrow=2)
+```
+
+
+## 5. Conclusion
+
+In conclusion, we would select auto.arima model with stepwise selection (ARIMA(1,1,1)) because we believe it performed better than the model with non-stepwise selection (ARIMA(2,1,2)).
+
+***
+RMarkdown code is available on my GitHub page (https://github.com/Singh-Gurjeet) in the Time Series and Forecasting repository.
+
+## 6. Appendix I: R Code
+```{r show_code, ref.label = knitr::all_labels(), echo=TRUE, eval=F}
+
+```
+
