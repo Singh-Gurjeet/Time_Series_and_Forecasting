@@ -1,0 +1,752 @@
+---
+title: "Predict_413_Sec55_Homework_2"
+author: "Singh, Gurjeet"
+date: "February 18, 2018"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    fig_width: 9
+    fig_height: 5
+    fig_caption: true
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+---
+
+\pagebreak
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE )
+library(fpp)
+library(tidyverse)
+
+```
+
+# Chapter 7
+## Question 1
+### Ch7.Q1.a)
+
+The figure below shows the plot of the daily sales of paperback and hardcover books at the same store. The data in the figure below do not display any seasonality for paperback and hardcover books. However, there could some trend here. We will know more once we plug this data into various models.
+
+```{r data_import, echo=F}
+### Ch7.Q1.a)
+data("books")
+autoplot(books) +
+  ggtitle("Daily sales of paperback and hardcover books at the same store")
+
+```
+
+### Ch7.Q1.b)
+
+The Table 1 below shows the various matrics from each SES models with different alpha. It appears that as alpha increases, the error increases as well. Hence, alpha = 0.2 works best.
+
+The Table 2 shows the SSE for each models using different alpha.
+
+The figure below shows the four different sets of forecasts.
+
+```{r simple, echo=F}
+### Ch7.Q1.b)
+fit1_pb <- ses(books[,1], initial = "simple", alpha = 0.2, h=4)
+SSE_fit1 <- (accuracy(fit1_pb)[2]^2)*30
+
+fit2_pb <- ses(books[,1], initial = "simple", alpha = 0.4, h=4)
+SSE_fit2 <- (accuracy(fit2_pb)[2]^2)*30
+
+fit3_pb <- ses(books[,1], initial = "simple", alpha = 0.6, h=4)
+SSE_fit3 <- (accuracy(fit3_pb)[2]^2)*30
+
+fit4_pb <- ses(books[,1], initial = "simple", alpha = 0.8, h=4)
+SSE_fit4 <- (accuracy(fit4_pb)[2]^2)*30
+
+Metrics_Values <- rbind.data.frame(accuracy(fit1_pb), accuracy(fit2_pb), accuracy(fit3_pb), 
+                                   accuracy(fit4_pb)) 
+rownames(Metrics_Values) <- c("alpha = 0.2", "alpha = 0.4", "alpha = 0.6", "alpha = 0.8")
+knitr::kable(Metrics_Values, caption = "Metrics from each model")
+
+SSE_Values <- cbind.data.frame(SSE_fit1, SSE_fit2, SSE_fit3, SSE_fit4) 
+colnames(SSE_Values) <- c("alpha = 0.2", "alpha = 0.4", "alpha = 0.6", "alpha = 0.8")
+rownames(SSE_Values) <- "SSE"
+knitr::kable(SSE_Values, caption = "SSE values of each model")
+
+autoplot(books[,1]) +
+  autolayer(fitted(fit1_pb), series = "alpha = 0.2") +
+autolayer(fitted(fit2_pb), series = "alpha = 0.4") +
+autolayer(fitted(fit3_pb), series = "alpha = 0.6") +
+  autolayer(fitted(fit4_pb), series = "alpha = 0.8") +
+  xlab("Days") + ylab("Paperback Books")
+
+```
+
+
+### Ch7.Q1.c)
+
+The summary statistic below is from SES model selected the optimal value of alpha. As we mentioned earlier that lower value of alpha gives us the best model, it is quite evident with the result that alpha = 0.1685 gave us the lowest RMSE and SSE.
+
+```{r ses_select, echo=F}
+### Ch7.Q1.c)
+fit5_pb <- ses(books[,1], h=4)
+summary(fit5_pb)
+SSE_fit5 <- data.frame((accuracy(fit5_pb)[2]^2)*30)
+colnames(SSE_fit5) <- c("alpha = 0.1685")
+rownames(SSE_fit5) <- "SSE Value"
+knitr::kable(SSE_fit5, caption = "SSE - SES Select")
+
+```
+
+
+### Ch7.Q1.d)
+
+The summary statistic below shows that with the initial = "optimal" option, we get the same alpha and initial states. There's no difference from SES selecting an optimal value without the option and after setting the optimal option.
+
+```{r ses_select_opt, echo=F}
+### Ch7.Q1.d)
+fit6_pb <- ses(books[,1], initial = "optimal" ,h=4)
+summary(fit6_pb)
+SSE_fit6 <- data.frame((accuracy(fit6_pb)[2]^2)*30)
+colnames(SSE_fit6) <- c("alpha = 0.1685")
+rownames(SSE_fit6) <- "SSE Value"
+knitr::kable(SSE_fit6, caption = "SSE - Optimal Select")
+
+```
+
+### Ch7.Q1.e)
+
+We run SES model for Hardcover books. The Table 5 below shows the various matrics from each SES models with different alpha. When alpha = 0.4, the RMSE is the lowest. Hence, forecast works best.
+
+The Table 6 shows the SSE for each models using different alpha. It is clear that alpha = 0.4 gives us the best forecast.
+
+The figure below shows the four different sets of forecasts.
+
+```{r part_B, echo=F}
+### Ch7.Q1.e) - Part B
+fit1_hc <- ses(books[,2], initial = "simple", alpha = 0.2, h=4)
+#summary(fit1_pb)
+SSE_fit1_hc <- (accuracy(fit1_hc)[2]^2)*30
+
+fit2_hc <- ses(books[,2], initial = "simple", alpha = 0.4, h=4)
+SSE_fit2_hc <- (accuracy(fit2_hc)[2]^2)*30
+summary(fit2_hc)
+fit3_hc <- ses(books[,2], initial = "simple", alpha = 0.6, h=4)
+SSE_fit3_hc <- (accuracy(fit3_hc)[2]^2)*30
+
+fit4_hc <- ses(books[,2], initial = "simple", alpha = 0.8, h=4)
+SSE_fit4_hc <- (accuracy(fit4_hc)[2]^2)*30
+
+Metrics_Values_hc <- rbind.data.frame(accuracy(fit1_hc), accuracy(fit2_hc), accuracy(fit3_hc), 
+                                   accuracy(fit4_hc)) 
+rownames(Metrics_Values_hc) <- c("alpha = 0.2", "alpha = 0.4", "alpha = 0.6", "alpha = 0.8")
+knitr::kable(Metrics_Values_hc, caption = "Metrics from each model")
+
+SSE_Values_hc <- cbind.data.frame(SSE_fit1_hc, SSE_fit2_hc, SSE_fit3_hc, SSE_fit4_hc) 
+colnames(SSE_Values_hc) <- c("alpha = 0.2", "alpha = 0.4", "alpha = 0.6", "alpha = 0.8")
+rownames(SSE_Values_hc) <- "SSE"
+knitr::kable(SSE_Values_hc, caption = "SSE values of each model")
+
+autoplot(books[,2]) +
+  autolayer(fitted(fit1_hc), series = "alpha = 0.2") +
+autolayer(fitted(fit2_hc), series = "alpha = 0.4") +
+autolayer(fitted(fit3_hc), series = "alpha = 0.6") +
+  autolayer(fitted(fit4_hc), series = "alpha = 0.8") +
+  xlab("Days") + ylab("Hardcover Books")
+
+```
+
+
+The summary statistic below is from SES model selected the optimal value of alpha. The model selects the optimal value of alpha = 0.3283. Forecast values are lower than than the results in 2 for alpha = 0.4.
+
+```{r part_C, echo=F}
+### Ch7.Q1.e) - Part C
+fit5_hc <- ses(books[,2], h=4)
+summary(fit5_hc)
+SSE_fit5_hc <- data.frame((accuracy(fit5_hc)[2]^2)*30)
+colnames(SSE_fit5_hc) <- c("alpha = 0.1685")
+rownames(SSE_fit5_hc) <- "SSE Value"
+knitr::kable(SSE_fit5_hc, caption = "SSE - SES Select")
+
+```
+
+
+The summary statistic below shows that with the initial = "optimal" option, we get the same alpha and initial states. There's no difference from SES selecting an optimal value without the option and after setting the optimal option.
+
+```{r part_D, echo=F}
+### Ch7.Q1.e) - Part D
+fit6_hc <- ses(books[,2], initial = "optimal" ,h=4)
+summary(fit6_hc)
+SSE_fit6_hc <- data.frame((accuracy(fit6_hc)[2]^2)*30)
+colnames(SSE_fit6_hc) <- c("alpha = 0.1685")
+rownames(SSE_fit6_hc) <- "SSE Value"
+knitr::kable(SSE_fit6_hc, caption = "SSE - Optimal Select")
+
+```
+
+## Question 2
+### Ch7.Q2.a)
+
+Table 9 shows the SSE value of paperback and hardback series obtained using Holt's linear method. These measures are much better than any of the SSE values obtained using SES. Earlier, we had doubts that data may have some trend behaviour. The result confirms that there's definitely trend behaviour present in the data. Hence, simple exponential smoothing may not be the best option for this kind of data.
+
+```{r holtsTrend, echo=F}
+### Ch7.Q2.a)
+fit1_holts <- holt(books[,1], h = 4)
+SSE_holts <- data.frame(sum(fit1_holts$residuals^2))
+colnames(SSE_holts) <- c("Holt's Linear - Paperback")
+rownames(SSE_holts) <- "SSE Value"
+
+fit2_holts <- holt(books[,2], h = 4)
+SSE_holts_2 <- data.frame(sum(fit2_holts$residuals^2))
+colnames(SSE_holts_2) <- c("Holt's Linear - Hardcover")
+rownames(SSE_holts_2) <- "SSE Value"
+
+knitr::kable(cbind(SSE_holts,SSE_holts_2) , caption = "SSE Values")
+
+```
+
+### Ch7.Q2.b)
+
+The figure below shows the forecast of Simple exponential smoothing and Holt's linear methods for paperback books. It appears that Holt's linear method performed better. Forecast from SES seems to be flat.
+
+```{r compare_forecast, echo=F}
+### Ch7.Q2.b)
+autoplot(books[,1]) + 
+  autolayer(fit5_pb$mean, series = "SES - Paperback") +
+  autolayer(fit1_holts$mean, series = "Holts - Paperback") + 
+  ggtitle("Forecast comparison SES vs Holt's for paperback series") +
+  xlab("Days") +
+  ylab("Books")
+```
+
+The figure below shows the forecast of Simple exponential smoothing and Holt's linear methods for hardcover books. Again, it appears that Holt's linear method performed better.
+
+```{r compare_forecast2, echo=F}
+### Ch7.Q2.b)
+autoplot(books[,2]) + 
+  autolayer(fit5_hc$mean, series = "SES - Hardcover") +
+  autolayer(fit2_holts$mean, series = "Holts - Hardcover") + 
+  ggtitle("Forecast comparison SES vs Holt's for hardcover series") +
+  xlab("Days") +
+  ylab("Books")
+
+```
+
+### Ch7.Q2.c)
+
+The figures below shows the 95% prediction interval for the forecase for each series using Holt's and Simple Exponential Smoothing methods. Both the methods are forecasting within the prediction interval.
+
+
+```{r pred_interval, echo=F}
+### Ch7.Q2.c)
+autoplot(fit1_holts) +
+    autolayer(fit1_holts$mean, series = "Holt's Method") +
+    autolayer(fit5_pb$mean, series = "SES Method") +
+  ggtitle("Forecast from Holt's Method for Paperback Books") +
+  xlab("Days") +
+  ylab("Books")
+
+autoplot(fit2_holts) +
+    autolayer(fit2_holts$mean, series = "Holt's Method") +
+    autolayer(fit5_hc$mean, series = "SES Method") +
+  ggtitle("Forecast from Holt's Method for Hardcover Books") +
+  xlab("Days") +
+  ylab("Books")
+```
+
+## Question 3
+### Ch7.Q3.a)
+
+
+
+
+## Appendix I: R Code
+
+```{r show_code, ref.label=knitr::all_labels(), echo=T, eval=F}
+
+
+
+```
+
+
+
+<!-- ### Ch2.Q2.a) -->
+
+<!-- The figure below shows the time series plot of Dow Jones index from August 28, 1972 to December 18, 1972. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- data("dowjones") -->
+<!-- autoplot(dowjones) + xlab("Day") + ylab("Dow Jones Index") + -->
+<!--   ggtitle("Dow-Jones index, 28 Aug - 18 Dec 1972") -->
+<!-- ``` -->
+
+<!-- ### Ch2.Q2.b) -->
+
+<!-- The figure below shows the forecast of the Dow Jones Index data using the drift method. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- autoplot(rwf(dowjones, drift=TRUE, h=20)) + -->
+<!--   forecast::autolayer(rwf(dowjones, drift=TRUE, h=20), PI=FALSE, series="Drift") + -->
+<!--   ggtitle("Dow-Jones index, 28 Aug - 18 Dec 1972") + -->
+<!--   xlab("Day") + ylab("Dow Jones Index") + -->
+<!--   guides(colour=guide_legend(title="Forecast")) -->
+
+<!-- ``` -->
+
+
+<!-- ### Ch2.Q2.c) -->
+
+<!-- The figure below shows that the forecasts are identical to extending the line drawn between the first and last observations.\newline -->
+<!-- ```{r} -->
+<!-- Xk <- length(dowjones) -->
+<!-- X1 <- 1 -->
+<!-- Yk  <- dowjones[Xk] -->
+<!-- Y1 <- dowjones[1] -->
+
+<!-- slope <- (Yk - Y1)/(Xk - X1) -->
+<!-- intercept <- Y1 - slope -->
+
+<!-- autoplot(rwf(dowjones, drift=TRUE, h=20)) + -->
+<!--   forecast::autolayer(rwf(dowjones, drift=TRUE, h=20), PI=FALSE, series="Drift") + -->
+<!--   ggtitle("Dow-Jones index, 28 Aug - 18 Dec 1972") + -->
+<!--   xlab("Day") + ylab("Dow Jones Index") + -->
+<!--   guides(colour=guide_legend(title="Forecast")) +  -->
+<!--   geom_abline(slope = slope, intercept = intercept, col = "khaki4") -->
+<!-- ``` -->
+
+<!-- ### Ch2.Q2.d) -->
+
+<!-- The figure below shows some of the benchmark functions such as Mean, Drift, and Naive methods to forecast the Dow Jones Index data. It appears that drift method is the clear winner here. \newline -->
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- autoplot(dowjones) + -->
+<!--   forecast::autolayer(meanf(dowjones, h=40), PI=FALSE, series="Mean") + -->
+<!--   forecast::autolayer(rwf(dowjones, h=40), PI=FALSE, series="Na?ve") + -->
+<!--   forecast::autolayer(rwf(dowjones, drift=TRUE, h=40), PI=FALSE, series="Drift") + -->
+<!--   ggtitle("Dow-Jones index, 28 Aug - 18 Dec 1972") + -->
+<!--   xlab("Day") + ylab("Dow Jones Index") + -->
+<!--   guides(colour=guide_legend(title="Forecast")) -->
+<!-- ``` -->
+<!-- The table below shows the metrics from each benchmark functions used to forecast the data. Looking at the results, it is quite evident that drift method performed really well and is the best method to select. However, the Naive method did not perform so poorly either. It appears that Naive method prediction is within 95% prediction intervals. Therefore, the metric results are very close to what drift method. \newline -->
+
+<!-- ```{r} -->
+<!-- meanfcast <- accuracy(meanf(dowjones, h=40)) -->
+<!-- row.names(meanfcast) <- "Mean" -->
+<!-- naivefcast <- accuracy(rwf(dowjones, h=40)) -->
+<!-- row.names(naivefcast) <- "Na?ve" -->
+<!-- driftfcast <- accuracy(rwf(dowjones, drift=TRUE, h=40)) -->
+<!-- row.names(driftfcast) <- "Drift" -->
+
+<!-- knitr::kable(rbind(meanfcast,naivefcast, driftfcast), caption = "Benchmark Results") -->
+<!-- ``` -->
+
+
+<!-- \pagebreak -->
+
+<!-- ## Question 3 -->
+
+<!-- ### Ch2.Q3.a) -->
+
+<!-- The figure below shows the time series plot of the daily closing IBM stock prices. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- data("ibmclose") -->
+<!-- autoplot(ibmclose) + xlab("Day") + ylab("Closing Price (US$)") + -->
+<!--   ggtitle("Daily closing IBM stock price") -->
+<!-- ``` -->
+
+
+<!-- ### Ch2.Q3.b&c) -->
+
+<!-- The figure below shows various benchmark functions such as Mean, Drift, and Naive methods used to forecast the daily closing IBM stock prices. It appears that naive and drift methods performed well here. They are well within the 80 and 95% prediction interval. \newline -->
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!--   #str(ibmclose) -->
+<!-- train.IBM.ts <- window(ibmclose, end =  300) -->
+<!-- test.IBM.ts <-  window(ibmclose, start = 301 , end =  369) -->
+<!--   # str(train.IBM.ts) -->
+<!--   # str(test.IBM.ts) -->
+<!-- Fcast.IBM.mean <- meanf(train.IBM.ts, h=40) -->
+<!-- Fcast.IBM.Naive <- rwf(train.IBM.ts, h=40) -->
+<!-- Fcast.IBM.Drift <- rwf(train.IBM.ts, drift=TRUE, h=40) -->
+
+<!-- autoplot(train.IBM.ts) + -->
+<!--   forecast::autolayer(Fcast.IBM.mean, PI=FALSE, series="Mean") + -->
+<!--   forecast::autolayer(Fcast.IBM.Naive, PI=FALSE, series="Na?ve") + -->
+<!--   forecast::autolayer(Fcast.IBM.Drift, PI=FALSE, series="Drift") + -->
+<!--   ggtitle("Daily closing IBM stock price") + -->
+<!--   xlab("Day") + ylab("Closing Price (US$)") + -->
+<!--   guides(colour=guide_legend(title="Forecast")) -->
+<!-- ``` -->
+<!-- \pagebreak -->
+
+<!-- The tables below list all the metrics from each benchmark functions used to forecast the data. Looking at the results, it appears that naive method is the best option here. MAPE and RMSE for 'Test Set' for naive method beats the other two.\newline -->
+
+<!-- ```{r} -->
+<!-- acc.Mean <- accuracy(Fcast.IBM.mean, test.IBM.ts) -->
+<!-- acc.Naive <- accuracy(Fcast.IBM.Naive, test.IBM.ts) -->
+<!-- acc.Drift <-accuracy(Fcast.IBM.Drift, test.IBM.ts) -->
+
+<!-- knitr::kable(acc.Mean[,1:6], caption = "Metrics for Mean Method") -->
+<!-- knitr::kable(acc.Naive[,1:6], caption = "Metrics for Naive Method") -->
+<!-- knitr::kable(acc.Drift[,1:6], caption = "Metrics for Drift Method") -->
+<!-- ``` -->
+
+
+
+<!-- ## Question 4 -->
+
+<!-- ### Ch2.Q4.a) -->
+
+<!-- The figure below shows the time series plot of the sales of new one-family houses in the USA from January 1973 to November 1995. \newline -->
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- data("hsales") -->
+<!-- autoplot(hsales) + xlab("Year") + ylab("Monthly Sales (US$)") + -->
+<!--   ggtitle("Monthly sales of new one-family houses sold in the USA since 1973") -->
+
+<!-- ``` -->
+
+<!-- ### Ch2.Q4.b&c) -->
+
+<!-- The figure below shows various benchmark functions such as Mean, Drift, and Naive methods used to forecast the sales of new one-family houses in the USA from January 1973 to November 1995. It appears that all three methods forecasted really close. It would ideal to see the metrics result of each method to select the best method. -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!--   #str(hsales) -->
+<!-- train.HS.ts <- window(hsales, Start = 1973, end = c(1993,11)) -->
+<!-- test.HS.ts <-  window(hsales, start = c(1993,12)) -->
+<!--   # str(train.HS.ts) -->
+<!--   # str(test.HS.ts) -->
+<!-- Fcast.HS.mean <- meanf(train.HS.ts, h=40) -->
+<!-- Fcast.HS.Naive <- rwf(train.HS.ts, h=40) -->
+<!-- Fcast.HS.Drift <- rwf(train.HS.ts, drift=TRUE, h=40) -->
+
+<!-- autoplot(train.HS.ts) + -->
+<!--   forecast::autolayer(Fcast.HS.mean, PI=FALSE, series="Mean") + -->
+<!--   forecast::autolayer(Fcast.HS.Naive, PI=FALSE, series="Na?ve") + -->
+<!--   forecast::autolayer(Fcast.HS.Drift, PI=FALSE, series="Drift") + -->
+<!--   ggtitle("Monthly sales of new one-family houses sold in the USA since 1973") + -->
+<!--   xlab("Year") + ylab("Monthly Sales (US$)") + -->
+<!--   guides(colour=guide_legend(title="Forecast")) -->
+
+<!-- ``` -->
+
+<!-- \pagebreak -->
+
+<!-- The tables below list all the metrics from each benchmark functions used to forecast the data. Looking at the results, it appears that naive method is the best option here. MAPE and RMSE for 'Test set' for naive method beat the other two. \newline -->
+
+<!-- ```{r} -->
+<!-- acc.Mean <- accuracy(Fcast.HS.mean, test.HS.ts) -->
+<!-- acc.Naive <- accuracy(Fcast.HS.Naive, test.HS.ts) -->
+<!-- acc.Drift <-accuracy(Fcast.HS.Drift, test.HS.ts) -->
+
+<!-- knitr::kable(acc.Mean[,1:6], caption = "Metrics for Mean Method") -->
+<!-- knitr::kable(acc.Naive[,1:6], caption = "Metrics for Naive Method") -->
+<!-- knitr::kable(acc.Drift[,1:6], caption = "Metrics for Drift Method") -->
+<!-- ``` -->
+
+
+
+<!-- # Chapter 4 -->
+<!-- ## Question 1 -->
+
+<!-- ### Ch4.Q1.a) -->
+
+<!-- There appears to be a negative relationship between temp and Mwh. However, the relationship is not perfect. As the temperature increases, the electricity consumption decreases. The negative relationship exists because of the less use of heater/heat due to the increase in the temperature. Therefore, the electricity consumption decreases. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- data("econsumption") -->
+<!-- ggplot(data = econsumption, mapping = aes(x = temp, y = Mwh)) +  -->
+<!--       geom_point() +  -->
+<!--       geom_smooth(method = 'lm',se = F) +  -->
+<!--       theme_classic() -->
+<!-- ``` -->
+
+
+<!-- ### Ch4.Q1.b) -->
+
+<!-- The figure below shows the normal QQ plot. It appears that most of the points fall on the line or close to it. It also shows that there is one outlier present (top right) in the data. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- fit <- with(econsumption, lm(Mwh ~ temp)) -->
+<!--   #summary(fit) -->
+<!--   #plot(with(econsumption, residuals(fit) ~ temp)) -->
+<!-- qqnorm(fit$residuals) -->
+<!-- qqline(fit$residuals) -->
+<!-- ``` -->
+
+<!-- The figure below shows the residual plots confirming that the errors are random and have constant variance. \newline -->
+
+<!-- ```{r } -->
+<!-- ggplot(data = econsumption, mapping = aes(x = temp, y =  residuals(fit))) +  -->
+<!--       geom_point() +  -->
+<!--       geom_smooth(method = 'lm',se = F) +  -->
+<!--       ggtitle("Scatterplot of temp vs Residuals") + -->
+<!--       theme_bw() + -->
+<!--       theme(plot.title = element_text(hjust=0.5)) -->
+<!-- ``` -->
+
+<!-- ### Ch4.Q1.c) -->
+
+<!-- The table below shows the forecasted values. The prediction seems to be accurate. For instance, in the source data, when the temperature was 10.4 degrees, the electricity consumption was 18.2 Mwh. For 10 degrees, our model has predicted 18.75 Mwh which to me seems quite close. \newline -->
+
+<!-- ```{r} -->
+<!-- tempLab <- data.frame(temp = c(10,35)) -->
+<!-- fcast <- forecast(fit, newdata = tempLab) -->
+<!-- attCol <- cbind.data.frame(tempLab, data.frame(fcast)) -->
+<!-- knitr::kable(attCol, caption = "Electricity Consumption Prediction  -->
+<!--                                   when temp = 10 and temp = 35") -->
+<!-- ``` -->
+
+<!-- \pagebreak -->
+
+<!-- ### Ch4.Q1.d) -->
+
+<!-- The figure below shows the forecast with 80% and 95% prediction intervals for electricity consumption with temperature = 10 degrees and temperature = 35 degrees. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- autoplot(fcast) +  -->
+<!--   xlab("Temperature (Celsius)") +  -->
+<!--   ylab("Electricity Consumption (Mwh)")  -->
+<!-- ``` -->
+
+
+<!-- ## Question 2 -->
+
+<!-- ### Ch4.Q2.a) -->
+
+<!-- The Winning times (in seconds) for men's 400 meters final for each of the last few Olympic games (2000 - 2012) has been included in the original dataset. The table below shows the summary statistic of the new dataset. \newline -->
+
+<!-- ```{r} -->
+<!-- data("olympic") -->
+<!-- lastfewoly <- data.frame(Year = c(2000, 2004, 2008, 2012),  -->
+<!--                           time = c(43.84, 44.00, 43.75, 43.94)) -->
+<!-- olympic <- rbind.data.frame(olympic, lastfewoly) -->
+<!-- summ <- cbind(summary(olympic$Year), -->
+<!--                    summary(olympic$time)) -->
+<!-- colnames(summ) <- c("Year","Time") -->
+<!-- knitr::kable(summ,  -->
+<!--              caption = "Summary Statistic") -->
+<!-- ``` -->
+
+<!-- ### Ch4.Q2.b) -->
+
+<!-- The figure below shows the scatterplot of Year vs time with the regression line. The plot shows that the winning times have significantly reduced in the recent years as compared to prior to 1950. There is also an outlier present (top left) in the data. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- ggplot(data = olympic, mapping = aes(x = Year, y =  time)) +  -->
+<!--       geom_point() +  -->
+<!--       geom_smooth(method = 'lm',se = T) +  -->
+<!--       ggtitle("Scatterplot of Year vs time") + -->
+<!--       ylab("Time (in seconds)") + -->
+<!--       theme_classic() + -->
+<!--       theme(plot.title = element_text(hjust=0.5)) -->
+<!-- ``` -->
+
+<!-- ### Ch4.Q2.c) -->
+
+<!-- The result below shows the summary statistic of our linear regression model. The dataset was split into training and test set. We use the 70/30 split approach. We then used the training set to create our regression model. We see that for every one unit increase in the year, the winning times will decrease on average by 0.088. \newline -->
+
+<!-- ```{r} -->
+<!-- train.df <- olympic[1:18,] -->
+<!-- test.df  <- olympic[19:27,] -->
+<!-- fitReg <- lm(time ~ Year, data = train.df) -->
+<!-- summary(fitReg) -->
+<!-- ``` -->
+<!-- ### Ch4.Q2.d) -->
+
+<!-- The Normal QQ plot below shows that most of the points fall on the line or close to it. It also shows that there are two outliers (one in the top right and one in the bottom left) in the data. \newline -->
+
+<!-- ```{r, fig.height=3, fig.width=5} -->
+<!-- qqnorm(fitReg$residuals) -->
+<!-- qqline(fitReg$residuals) -->
+<!-- ``` -->
+
+<!-- The residual plot shows that the errors are random. It does seem to me that there is any pattern to it. Hence, we conclude that residuals show constant variance. \newline -->
+
+<!-- ```{r, fig.height=3, fig.width=5} -->
+<!-- ggplot(data = train.df, mapping = aes(x = Year, y =  residuals(fitReg))) +  -->
+<!--     geom_point() +  -->
+<!--     geom_smooth(method = 'lm',se = F) +  -->
+<!--     ggtitle("Scatterplot of Year vs Residuals") + -->
+<!--     theme_bw() + -->
+<!--     theme(plot.title = element_text(hjust=0.5)) -->
+<!-- ``` -->
+
+<!-- \pagebreak -->
+
+<!-- ### Ch4.Q2.e&f) -->
+
+<!-- The figure below shows the forecast with 80% and 95% prediction intervals for winning times with year greater than 1976. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- fcastReg <- forecast(fitReg, newdata = test.df) -->
+<!-- YearLab <- data.frame(Year = test.df$Year) -->
+<!-- attCol <- cbind.data.frame(YearLab, Obs_Time = test.df$time, data.frame(fcastReg)) -->
+<!-- autoplot(fcastReg) + -->
+<!--   xlab("Year") + -->
+<!--   ylab("Winning Times (in seconds)") -->
+<!-- ``` -->
+
+<!-- The table below shows the observed winning time and predicted winning time for four Olympics games held in years 2000, 2004, 2008, and 2014. Looks like our model did not project very well as compared to the reality. However, the prediction is within the 95% interval. \newline -->
+
+<!-- ```{r} -->
+<!-- knitr::kable(attCol[attCol$Year>1996, c('Year','Obs_Time', "Point.Forecast")],  -->
+<!--             caption = "Olympic Games Winning  -->
+<!--                       Times Prediction", row.names = F) -->
+<!-- ``` -->
+
+<!-- ## Question 3 -->
+
+<!-- The steps below show the derivation of the log-log model to prove that coefficient B1 is the elasticity coefficient. \newline -->
+
+<!--   Step 1: log y = B0 + B1*log x + e     (log-log model)   -->
+<!--   Step 2: ddy[log y] = ddy[B0] + ddy[B1 * log x] + ddy [e] (taking derivatives on each side )   -->
+<!--   Step 3: 1/y = 0 + B1 * ddy[log x] + 0 (ddy values ddy[log y] = 1/y; ddy[log x] = 1/x; ddy[B0] = 0 = ddy[e])   -->
+<!--   Step 4: 1/y = B1 * 1/x   -->
+<!--   Step 5: x = B1y   -->
+<!--   Step 6: x/y = B1  -->
+
+
+<!-- # Chapter 6 -->
+
+<!-- ## Question 1 -->
+
+<!-- The following transformation shows that 3 X 5 MA is equivalent to a 7-term weighted moving average with weights of 0.067, 0.133, 0.200, 0.200, 0.200, 0.133, and 0.067 \newline -->
+
+<!-- = 1/3[1/5(Yt-3 + Yt-2 + Yt-1 + Yt + Yt+1) + 1/5(Yt-2 + Yt-1 + Yt + Yt+1 + Yt+2) + 1/5(Yt-1 + Yt + Yt + 1 + Yt+2 + Yt+3)]   -->
+<!-- = 1/3[1/5{ Yt-3 + Yt-2 + Yt-1 + Yt + Yt+1 + Yt-2 + Yt-1 + Yt + Yt+1 + Yt+2 + Yt-1 + Yt + Yt + 1 + Yt+2 + Yt+3}]   -->
+<!-- = 1/15[Yt - 3 + 2(Yt-2) + 3(Yt-1) + 3(Yt) +3(Yt + 1) + 2(Yt + 2)  + Yt+3]   -->
+<!-- = 1/15(Yt - 3) + 2/15(Yt - 2) + 1/5(Yt-1) + 1/5(Yt) + 1/5(Yt+1) + 2/15(Yt + 2) + 1/15(Yt+3)   -->
+<!-- = 0.067(Yt - 3) + 0.133(Yt - 2) + 0.2(Yt-1) + 0.2 (Yt) + 0.2 (Yt+1) + 0.133 (Yt + 2) + 0.067 (Yt+3)   -->
+
+<!-- ## Question 2 -->
+
+<!-- ### Ch6.Q2.a) -->
+
+<!-- Yes, we identify the seasonal fluctuations and the trend in the plot below. Every year there's a slight decrease in the sale, in the beginning, sale picks up in the mid of the year, and then starts to decrease again. Also, the sale has been increasing year over year. Hence, there's also an increasing trend in the sale of product A. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- data("plastics") -->
+<!-- autoplot(plastics) +  -->
+<!--       ylab("Sale Amount (in thousands)") +  -->
+<!--       xlab("Year") + -->
+<!--       ggtitle("Monthly sales of product A  -->
+<!--                   for a plastics manufacturer") -->
+<!-- ``` -->
+
+
+<!-- ### Ch6.Q2.b&c) -->
+
+<!-- The figure below shows trend-cycle and seasonal indices of the classical multiplicative decomposition. \newline -->
+
+<!-- Yes, the results in the figure below support the graphical interpretation of part(a). With this decomposition, we confirm that the seasonal fluctuations and the increasing trend are present in the data. \newline -->
+
+<!-- ```{r, fig.height=7, fig.width=6} -->
+<!-- plastics %>%  -->
+<!--       decompose(type="multiplicative") %>%  -->
+<!--       autoplot() + xlab("Year") + -->
+<!--       ggtitle("Classical multiplicative decomposition of product A") -->
+<!-- ``` -->
+
+
+<!-- ### Ch6.Q2.d) -->
+
+<!-- The figure below shows the plot of the original data and seasonally adjusted data. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- fit <- stl(plastics, s.window="periodic", robust = T) -->
+<!-- autoplot(plastics, series = "Data") + -->
+<!--     forecast::autolayer(seasadj(fit), series="Seasonally Adjusted") + -->
+<!--     xlab("Year") + ylab("Sale Amount (in thousands)") + -->
+<!--     ggtitle("Product A monthly sales with seasonally adjusted") + -->
+<!--     scale_colour_manual(values=c("darkgoldenrod","blue"), -->
+<!--                      breaks=c("Data","Seasonally Adjusted")) -->
+<!-- ``` -->
+
+
+<!-- ### Ch6.Q2.e) -->
+
+<!-- In the original data, we replaced the amount to 2,023 for the month of December and year 3. The tables below show the changes in the seasonally adjusted data. The first table shows the result from the original data set and second table shows the result from the data set with an outlier. \newline -->
+
+<!-- ```{r} -->
+<!-- #Seasonally adjusted data from original data set -->
+<!-- seasFit <- seasadj(fit) -->
+<!-- seasFit -->
+
+<!-- plastics_outlier <- as.xts(plastics) -->
+<!-- plastics_outlier["000312"] <- 2023  #added 1000 to the original value -->
+<!-- fit_outier <- stl(as.ts(plastics_outlier), s.window="periodic", robust = T) -->
+<!-- #Seasonally adjusted data from outlier data set -->
+<!-- seasFit.outlier <- seasadj(fit_outier) -->
+<!-- seasFit.outlier -->
+<!-- ``` -->
+
+<!-- The figure below shows the changes due to the outlier. We see the peak in the data and seasonally adjusted plots where the outlier exists. However, I cannot determine if it there's any other effect on the graph due to the outlier. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- autoplot(as.ts(plastics_outlier), series = "Data") + -->
+<!--     forecast::autolayer(seasFit.outlier, series="Seasonally Adjusted") + -->
+<!--     xlab("Year") + ylab("Sale Amount (in thousands)") + -->
+<!--     ggtitle("Product A monthly sales with seasonally adjusted") + -->
+<!--     scale_colour_manual(values=c("darkgoldenrod","blue"), -->
+<!--                      breaks=c("Data","Seasonally Adjusted")) -->
+<!-- ``` -->
+
+<!-- ### Ch6.Q2.f) -->
+
+<!-- Based on the values and the plot, it appears that there's no difference if the outlier is near the end rather than in the middle of the time series. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- plastics_outlier <- as.xts(plastics) -->
+<!-- plastics_outlier["000510"] <- 1920  #added 500 to the original value -->
+<!-- fit_outier_End <- stl(as.ts(plastics_outlier), s.window="periodic", robust = T) -->
+<!-- seasFit.outlier.End <- seasadj(fit_outier_End) -->
+<!-- seasFit.outlier.End -->
+<!-- ``` -->
+
+<!-- Again, I cannot determine any difference in the graph below. Not sure, if it there's any effect on the graph due to the outlier apart from the peak at the outlier point. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- autoplot(as.ts(plastics_outlier), series = "Data") + -->
+<!--     forecast::autolayer(seasFit.outlier.End, series="Seasonally Adjusted") + -->
+<!--     xlab("Year") + ylab("Sale Amount (in thousands)") + -->
+<!--     ggtitle("Product A monthly sales with seasonally adjusted") + -->
+<!--     scale_colour_manual(values=c("darkgoldenrod","blue"), -->
+<!--                      breaks=c("Data","Seasonally Adjusted")) -->
+<!-- ``` -->
+
+
+<!-- ### Ch6.Q2.g) -->
+
+<!-- The figure below shows the forecast of the seasonally adjusted data using the random walk with drift. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- autoplot(rwf(seasadj(fit), drift = TRUE, h=20)) + -->
+<!--   forecast::autolayer(rwf(seasadj(fit), drift = TRUE, h=20), PI=FALSE, series="Drift") + -->
+<!--       ylab("Sale Amount (in thousands)") +  -->
+<!--       ggtitle("Drift forecasts of seasonally adjusted data") + -->
+<!--       guides(colour=guide_legend(title="Forecast")) -->
+<!-- ``` -->
+
+<!-- ### Ch6.Q2.h) -->
+
+<!-- The figure below shows the forecast of the product A sales data based on the naive forecast of the seasonally adjusted data and a seasonal naive forecast of the seasonal component, after an STL decomposition of the data. The forecast is between 80% and 95% prediction intervals. \newline -->
+
+<!-- ```{r, fig.height=5, fig.width=8} -->
+<!-- stlf(plastics, method = "naive") %>%  -->
+<!--           autoplot() + ylab("Sale Amount (in thousands)") -->
+<!-- ``` -->
+
+
+<!-- ## Question 3 -->
+
+<!-- ### Ch6.Q3.a) -->
+
+<!-- In Figure 6.13, the 'data' panel is the actual observed data. The three components ('seasonal', 'trend', and 'remainder') in the bottom panels can be added together to reconstruct the data shown in the 'data' panel. In the figure, we notice that the seasonal component changes very slowly over time. The trend-cycle is linear and increasing. the remainder component is shown in the bottom panel is what is left over when the seasonal and trend-cycle components have been subtracted from the data.   -->
+
+<!-- The large grey bar in the second panel shows that the variation in the seasonal component is small as compared to the variation in the data. -->
+
+<!-- In Figure 6.13, the bottom graph shows the seasonal sub-series plot of the seasonal component. This kind of graph helps us to visualize the variation in the seasonal component over time. In this case, we notice there are only very small changes over time. -->
+
+
+<!-- ### Ch6.Q3.b) -->
+
+<!-- Yes, the recession of 1991/1992 is visible in the estimated components. This can be observed in the fourth panel i.e. remainder component. The is a negative peak in the remainder component for the year 1991 and 1992. -->
+
+
+
+
