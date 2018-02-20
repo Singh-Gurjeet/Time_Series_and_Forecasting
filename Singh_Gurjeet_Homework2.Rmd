@@ -298,6 +298,122 @@ eggs %>%
 
 ```
 
+## Question 4
+### Ch7.Q4.a)
+
+The figure below shows the plot of the quarterly UK passenger vehicle production from January 1977 to January 2005.The data in the figure below display seasonality as well as trend behaviour.
+
+```{r data_import_4, echo=F}
+### Ch7.Q4.a)
+data("ukcars")
+autoplot(ukcars) +
+  ggtitle("Quarterly UK passenger vehicle production") +
+  xlab("Year") +
+  ylab("Cars") +
+  theme_bw()
+
+```
+
+
+### Ch7.Q4.b)
+
+The figure below shows trend-cycle and seasonal indices of the STL decomposition. We can see the increasing trend from the beginning of 1980 to 1998. Earlier we mentioned that there are some seasonality in the data. Here, we can clearly see the seasonal effects in the third panel. The large gray bar in the third panel shows that variation in the seasonal component is small as compared to the variation in the data.
+
+```{r stlDecom, echo=F, fig.height=7, fig.width=6}
+### Ch7.Q4.b)
+
+fit_stl <- stl(ukcars, t.window=13, s.window="periodic", robust=TRUE)
+
+fit_stl %>% 
+  autoplot() +
+    ggtitle("Robust STL decomposition") +
+    theme_bw()
+
+```
+
+The figure below shows the plot of the seasonally adjusted data obtained using the robust STL decomposition.
+
+```{r seasAdj, echo=F}
+### Ch7.Q4.b)
+fit_stl %>% 
+  seasadj() %>% 
+  autoplot() +
+  ggtitle("Seasonally adjusted data") +
+  theme_bw()
+
+```
+
+### Ch7.Q4.c)
+
+The table below shows the metrics for an additive damped trend method applied to the seasonally adjusted data and reseasonalized forecast.
+
+```{r fcast_damped, echo=F}
+### Ch7.Q4.c)
+seasAdj_ts <- seasadj(fit_stl)
+
+fit_damp <- holt(seasAdj_ts, damped = T, h=8)
+acc_damp <- accuracy(fit_damp)
+rownames(acc_damp) <- "Additive Damped"
+
+acc_reseason <- accuracy(forecast(fit_stl))
+rownames(acc_reseason) <- "Reseasonalize Forecast"
+
+knitr::kable(rbind(acc_damp, acc_reseason), caption = "Metrics")
+
+```
+
+
+### Ch7.Q4.d)
+
+
+
+```{r fcast_linearHolt, echo=F}
+### Ch7.Q4.d)
+seasAdj_ts <- seasadj(fit_stl)
+
+fit_holt <- holt(seasAdj_ts, h=8)
+acc_holt <- accuracy(fit_holt)
+rownames(acc_holt) <- "Holt's linear"
+
+acc_reseason_ln <- accuracy(forecast(fit_stl))
+rownames(acc_reseason_ln) <- "Reseasonalize Forecast"
+
+knitr::kable(rbind(acc_holt, acc_reseason_ln), caption = "Metrics")
+
+```
+
+
+### Ch7.Q4.e)
+
+
+```{r fcast_ets, echo=F}
+### Ch7.Q4.e)
+fit_ets <- ets(ukcars)
+acc_ets <- accuracy(fit_ets)
+rownames(acc_ets) <- "ETS"
+
+knitr::kable(acc_ets, caption = "Metrics")
+
+```
+
+### Ch7.Q4.f)
+
+Based on the table below, it seems like ETS model had a better in-sample fit.
+
+```{r compare_rmse, echo=F}
+### Ch7.Q4.f)
+knitr::kable(rbind(acc_damp,acc_holt, acc_ets), caption = "Metrics")
+
+```
+
+### Ch7.Q4.e)
+
+Add here
+
+
+# Chapter 8
+## Question 1
+
 
 ## Appendix I: R Code
 
