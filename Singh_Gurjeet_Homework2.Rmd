@@ -432,7 +432,7 @@ autoplot(y) +
 
 THe plot below show the time series plot of the data generated from an AR(1) model with theta = 0 and sigma squared = 1. By changing the theta, it appears that the seasonal effect got more closer.
 
-```{r simpleARIMA, echo=F}
+```{r simpleARIMA2, echo=F}
 y <- ts(numeric(100))
 e <- rnorm(100)
 for(i in 2:100){
@@ -443,8 +443,18 @@ autoplot(y) +
   theme_bw()
 ```
 
-### Ch8.Q5.b)
+### Ch8.Q5.c&d)
 
+```{r MA1, echo=F}
+y <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100){
+  y[i] <- e[i] + 0.6*e[i-1]
+}
+autoplot(y) +
+  ggtitle("Time Series Plot of MA(1) when theta = 0.6, sigma square = 1") +
+  theme_bw()
+```
 
 ## Appendix I: R Code
 
