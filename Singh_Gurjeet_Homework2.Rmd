@@ -417,7 +417,7 @@ The forecasts generated Holt's linear method approach display a constant trend (
 ## Question 5
 ### Ch8.Q5.a&b)
 
-THe plot below show the time series plot of the data generated from an AR(1) model with theta = 0.6 and sigma squared = 1.
+THe plot below show the time series plot of the data generated from an AR(1) model with Phi = 0.6 and sigma squared = 1.
 
 ```{r simpleARIMA, echo=F}
 y <- ts(numeric(100))
@@ -426,11 +426,11 @@ for(i in 2:100){
   y[i] <- 0.6*y[i-1] + e[i]
 }
 autoplot(y) +
-  ggtitle("Time Series Plot when theta = 0.6, sigma square = 1") +
+  ggtitle("Time Series Plot when Phi = 0.6, sigma square = 1") +
     theme_bw()
 ```
 
-THe plot below show the time series plot of the data generated from an AR(1) model with theta = 0 and sigma squared = 1. By changing the theta, it appears that the seasonal effect got more closer.
+The plot below show the time series plot of the data generated from an AR(1) model with Phi = 0 and sigma squared = 1. By changing the Phi, it appears that the seasonal effect got more closer.
 
 ```{r simpleARIMA2, echo=F}
 y <- ts(numeric(100))
@@ -439,11 +439,15 @@ for(i in 2:100){
   y[i] <- 0*y[i-1] + e[i]
 }
 autoplot(y) +
-  ggtitle("Time Series Plot when theta = 0, sigma square = 1") +
+  ggtitle("Time Series Plot when Phi = 0, sigma square = 1") +
   theme_bw()
 ```
 
 ### Ch8.Q5.c&d)
+
+THe plot below show the time series plot of the data generated from an MA(1) model with Phi = 0.6 and sigma squared = 1.
+
+The second plot below show the time series plot of the data generated from an MA(1) model with Phi = 0 and sigma squared = 1. By changing the Phi, it appears that the seasonal effect got more closer.
 
 ```{r MA1, echo=F}
 y <- ts(numeric(100))
@@ -452,9 +456,183 @@ for(i in 2:100){
   y[i] <- e[i] + 0.6*e[i-1]
 }
 autoplot(y) +
-  ggtitle("Time Series Plot of MA(1) when theta = 0.6, sigma square = 1") +
+  ggtitle("Time Series Plot of MA(1) when Phi = 0.6, sigma square = 1") +
+  theme_bw()
+
+y <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100){
+  y[i] <- e[i] + 0*e[i-1]
+}
+autoplot(y) +
+  ggtitle("Time Series Plot of MA(1) when Phi = 0, sigma square = 1") +
   theme_bw()
 ```
+
+
+### Ch8.Q5.e,f,&g)
+
+The top plot below show the time series plot of the data generated from an ARMA(1,1) model with Phi = 0.6 and Theta = 0.6 and sigma sqr = 1. The second plot below show the time series plot of the data generated from an AR(2) model with Phi = -0.8 and Phi = 0.3 and sigma sqr = 1. It appears that the second plot is a non-stationary series while the first one seem to be a stationary series.
+
+
+```{r ARMA11, echo=F}
+y <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100){
+  y[i] <-  0.6*y[i-1] + 0.6*e[i-1] + e[i]
+}
+P1 <- autoplot(y) +
+  ggtitle("Time Series Plot of ARMA(1,1) when Phi = 0.6 and Theta=0.6 and sigma sqr=1") +
+  theme_bw()
+
+y <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 3:100){
+  y[i] <- y[i-1]*(-0.8) + 0.3*y[i-2] + e[i]
+}
+P2 <- autoplot(y) +
+  ggtitle("Time Series Plot of AR(2) when Phi = -0.8 and Phi = 0.3  and sigma sqr=1") +
+  theme_bw()
+
+gridExtra::grid.arrange(P1, P2, nrow=2)
+```
+
+## Question 6
+### Ch8.Q6.a)
+
+The figure below shows the time series plot of the number of wonmen murdered each year in the US.
+
+```{r ARIMA1, echo=F}
+data("wmurders")
+#View(wmurders)
+
+autoplot(wmurders) +
+  ggtitle("Number of women murdered each year in the US") +
+  theme_bw() +
+  xlab("Year")
+
+```
+
+The figure below shows the ACF and PACF plots for the number of women murdered each year in the US. In the figure below, it appears that the data follow an ARIMA(p,d,0) model because the plot of the differenced data show the ACF is exponentially decaying and there is a significant spike at lag p in PACF, but none beyond lag p. Therefore, in ACF plot, there are nine (9) spikes decreasing with the lag and then no significant spikes thereafter. Hence, the pattern in the first nine spikes is what we would expect from an ARIMA(9,0,0) as the ACF tends to decay exponentially.
+
+
+```{r ARIMA_ACF_PACF, echo=F}
+gg1 <- ggAcf(wmurders, main="ACF plot")
+gg2 <- ggPacf(wmurders, main="PACF plot")
+
+gridExtra::grid.arrange(gg1,gg2,nrow = 2)
+```
+
+### Ch8.Q6.b)
+
+Based on the results from ACF and PACF plots, it doesn't seem to be a need for constant in the model because the long term forecasts will not go to the mean of the data, follow a straight line, or follow a quadratic trend.
+
+
+### Ch8.Q6.c)
+
+ARIMA(p,d,q) model is given by: 
+
+((1 - B)^d)*Yt = mu + (theta(B)/phi(B))at \newline
+
+Where, \newline
+t - indexes time\newline
+mu - is the mean term \newline
+B - is the backshift operator; that is, BXt=Xt-1 \newline
+phi(B) - is the autoregressive operator \newline
+theta(B) - is the moving-average operator \newline
+at - is the independent disturbance, also called the random error \newline
+
+The ARIMA(9,0,0) model in terms of the backshift operator is shown below:
+
+((1 - B)^d)*Yt = mu + ((1 - theta0(B))/(1 - phi1(B) - ... - phi9(B)^9))at \newline
+
+
+### Ch8.Q6.d)
+
+We create three models, auto.arima, ARIMA(9,0,0) - our model, and ARIMA(9,1,0). Two of the models created is to compare with our model. Below is the summary from each model. When comparing the RMSE for each model, it seems like our ARIMA(9,0,0) model performed the best.
+
+```{r ARIMA_fit, echo=F}
+### Ch8.Q6.d)
+summary(auto.arima(wmurders))
+summary(Arima(wmurders, order = c(9,0,0)))
+summary(Arima(wmurders, order = c(9,1,0)))
+
+```
+
+The figure below shows the residuals from ARIMA(9,0,0) model with non-zero mean. In the ACF plot, all the spikes are now within the significance limits, and so the residual apprea to be white noise. Therefore, the model is satisfactory.
+
+```{r ARIMA_res, echo=F}
+checkresiduals(arima(wmurders, order = c(9,0,0)))
+
+```
+### Ch8.Q6.e&f)
+
+The figure below shows the forecast for the next three years with the 80% and 95% prediction interval.
+
+```{r ARIMA_fcast, echo=F}
+fcast <- forecast(arima(wmurders, order = c(9,0,0)), h=3)
+
+autoplot(fcast) +
+  theme_bw()
+```
+
+### Ch8.Q6.g)
+
+In section Ch8.Q6.d), I have compared auto.arima with our model. The auto.arima do not give us the same model. The model produced by auto.arima is ARIMA(1,2,1) which did not perform better than our model. The RMSE is little higher than our model. Therefore, ARIMA(9,0,0) model is the better model.
+
+
+
+## Question 7
+### Ch8.Q7.a)
+
+The figure below shows the quarterly number of international tourists to Australia for the period 1999-2010. The data follows the seasonal patterns and have the increasing trend.
+
+```{r data_AUS, echo=F}
+data("austourists")
+autoplot(austourists) +
+  ggtitle("Quarterly number of international tourists to Australia for the period 1999-2010") +
+  theme_bw() +
+  xlab("Year")
+```
+
+### Ch8.Q7.b&c)
+
+The figure below shows the ACF and PACF plots for the quarterly number of international tourists to Australia for the period 1999-2010. In the figure below, ACF plot shows that the lag is every fourth term because there are spikes at lag 4, lag 8, lag 12, and lag 16 and is exponentially decaying in the deasonal lags of the ACF. Hence, the data will follow an ARIMA(0,0,0)(1,0,0)4 model.
+
+data follow an ARIMA(p,d,0) model because the plot of the differenced data show the ACF is exponentially decaying and there is a significant spike at lag p in PACF, but none beyond lag p. Therefore, in ACF plot, there are nine (9) spikes decreasing with the lag and then no significant spikes thereafter. Hence, the pattern in the first nine spikes is what we would expect from an ARIMA(9,0,0) as the ACF tends to decay exponentially.
+
+
+```{r ACF_PACF, echo=F}
+gg1 <- ggAcf(austourists, main="ACF plot")
+gg2 <- ggPacf(austourists, main="PACF plot")
+
+gridExtra::grid.arrange(gg1,gg2,nrow = 2)
+```
+
+### Ch8.Q7.d)
+
+The figure below shows the seasonally differenced data along with ACF and PACF plots. There is a significant spike at lag 1 in the ACF suggests a non-seasonal MA(1) component, and the significant spike at lag 4 in the ACF suggests a seasonal MA(1) component. Therefore, we begin with an ARIMA(0,1,1)(0,1,1)[4] model.
+
+```{r plotseas, echo=F}
+
+austourists %>% 
+    diff(lag=4) %>%
+    ggtsdisplay()
+```
+
+
+### Ch8.Q7.e)
+
+The summary below shows the summaries of auto.arima and ARIMA(0,1,1)(0,1,1)[4]. The auto.arima gave us the model ARIMA(1,0,0)(1,1,0)[4] with drift. The auto.arima model is the better model for this data because AIC and RMSE are lower than the ARIMA(0,1,1)(0,1,1)[4] model.
+
+```{r autoARima, echo=F}
+atArm <- auto.arima(austourists)
+fitarm <- Arima(austourists, order = c(0,1,1), seasonal = list(order = c(0,1,1), period = 4))
+# fitarm <- Arima(austourists, order = c(0,1,1), seasonal = list(order = c(0,1,1)))
+summary(atArm)
+summary(fitarm)
+```
+
 
 ## Appendix I: R Code
 
@@ -463,5 +641,25 @@ autoplot(y) +
 
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
