@@ -633,10 +633,125 @@ summary(atArm)
 summary(fitarm)
 ```
 
+### Ch8.Q7.f)
+
+Since we are using auto.arima as our final model, we will write the model in terms of the backshift operator as follows:
+
+Seasonal ARIMA models are expressed in factored form by the notation ARIMA(p,d,q)(P,D,Q)s, where
+
+P - is the order of the seasonal autoregressive part \newline
+D - is the order of the seasonal differencing (rarely should D > 1 be needed)  \newline
+Q - is the order of the seasonal moving-average process  \newline
+s - is the length of the seasonal cycle \newline
+
+Given a dependent time series [Yt : 1 <= t <= n] ,mathematically the ARIMA seasonal model is written as 
+
+(1-B)^d(1-B^s)^D Yt = mu + ((theta(B) thetas(B^s))/(phi(B) phis(B^s)))at \newline
+where, \newline
+phis(B^s) - is the seasonal autoregressive operator \newline
+thetas(B^s) - is the seasonal moving-average operator \newline
+
+Therefore, our model ARIMA(1,0,0)(1,1,0)[4] can we written as:
+
+(1-B^4)Yt = mu + ((1 - theta1(B))(1-thetas1(B^4) - thetas2 0^B^8))/(1 - phi(B) (1 - phis 1^(B^4)))at
+
+
+## Question 8
+### Ch8.Q8.a)
+
+In the figure below, we see the increasing trend which means there is an increase in the electricity generation over time. The original data also show the strong seasonal component.
+
+
+```{r data_usmelec, echo=F}
+data("usmelec")
+
+  autoplot(usmelec, series="Data") +
+  autolayer(ma(usmelec,12), series="12-MA") +
+  xlab("Year") + ylab("Billions of kilowatt hours (kWh)") +
+  ggtitle("Total net generation of electricity by the U.S. electric industry") +
+  scale_colour_manual(values=c("Data"="grey50","12-MA"="red"),
+                     breaks=c("Data","12-MA"))
+
+
+```
+
+### Ch8.Q8.b)
+
+In the previous section, we noticed variation in the data. Therefore, transformation will be useful. We will use the Box-Cox transformation.
+
+```{r trans, echo=F}
+lambda <- BoxCox.lambda(usmelec)
+autoplot(BoxCox(usmelec,lambda))
+```
+
+### Ch8.Q8.c)
+
+The data does not appear to be stationary. The first figure below shows the seasonal difference. This figure shows that the data still appear to be non-stationary. Therefore, we take an additional first difference, shown in the next figure. It seems to me that the data now appears to be stationary. However, there are significant spikes at various lags.
+
+```{r plotStationary, echo=F}
+
+usmelec %>% 
+    diff(lag=12) %>%
+    ggtsdisplay() 
+
+usmelec %>% 
+    diff(lag=12) %>%
+    diff() %>% 
+    ggtsdisplay()
+```
+
+### Ch8.Q8.d)
+
+We created four ARIMA models (including one auto.arima model). According to the AIC values, our best model is ARIMA(2,1,1)(2,1,1).
+
+```{r ARIMA_mods, echo=F}
+fit1 <- Arima(usmelec, order = c(1,0,1), seasonal = c(1,1,1))
+aic1 <- fit1$aic
+fit2 <- Arima(usmelec, order = c(2,1,1), seasonal = c(2,1,1))
+aic2 <- fit2$aic
+fit3 <- Arima(usmelec, order = c(2,2,2), seasonal = c(2,2,1))
+aic3 <- fit3$aic
+fit4 <- auto.arima(usmelec)
+aic4 <- fit4$aic
+
+aic <- cbind(aic1,aic2,aic4,aic4)
+rownames(aic) <- "AIC"
+colnames(aic) <- c("Arima(1,0,1)(1,1,1)","Arima(2,1,1)(2,1,1)","Arima(2,2,2)(2,2,1)", "Arima(1,0,2)(0,1,1) with drift")
+knitr::kable(aic, caption = "AIC Values")
+
+```
+
+
+
+### Ch8.Q8.e)
+
+The figure below shows the ARIMA model selected and estimated. The ARIMA model captures all the dynamics in the data as the residual seems to be white noise. The residuals are also distributed normally. 
+
+```{r estimate_param, echo=F}
+
+checkresiduals(fit2)
+```
+
+### Ch8.Q8.f)
+
+The figure below shows the accuracy of the forecast and the 15 years forecasted plot.
+
+```{r fcast15, echo=F}
+elect <- read_csv("electricity-overview.csv")
+colnames(elect) <- c("Month", "Electricity")
+elect_ts <- ts(elect$Electricity, start = c(1973,1), frequency = 12)
+fcast <- forecast(fit2, h=15*12)
+knitr::kable(accuracy(fcast, elect_ts), caption = "Accuracy")
+
+autoplot(fcast)
+```
+
+
 
 ## Appendix I: R Code
 
 ```{r show_code, ref.label=knitr::all_labels(), echo=T, eval=F}
+
 
 
 
