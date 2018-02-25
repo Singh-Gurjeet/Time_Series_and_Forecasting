@@ -3,21 +3,22 @@ title: "Predict_413_Sec55_Homework_2"
 author: "Singh, Gurjeet"
 date: "February 18, 2018"
 output:
-  html_document:
-    df_print: paged
-    toc: yes
-    toc_depth: '3'
   pdf_document:
     toc: yes
     toc_depth: 3
     fig_width: 9
     fig_height: 5
     fig_caption: true
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE )
 library(fpp)
 library(tidyverse)
+memory.size(max = TRUE)
 
 ```
 # Chapter 7
@@ -54,13 +55,15 @@ SSE_fit3 <- (accuracy(fit3_pb)[2]^2)*30
 fit4_pb <- ses(books[,1], initial = "simple", alpha = 0.8, h=4)
 SSE_fit4 <- (accuracy(fit4_pb)[2]^2)*30
 
-Metrics_Values <- rbind.data.frame(accuracy(fit1_pb), accuracy(fit2_pb), accuracy(fit3_pb), 
-                                   accuracy(fit4_pb)) 
-rownames(Metrics_Values) <- c("alpha = 0.2", "alpha = 0.4", "alpha = 0.6", "alpha = 0.8")
+Metrics_Values <- rbind.data.frame(accuracy(fit1_pb), accuracy(fit2_pb), 
+                                   accuracy(fit3_pb), accuracy(fit4_pb)) 
+rownames(Metrics_Values) <- c("alpha = 0.2", "alpha = 0.4", 
+                              "alpha = 0.6", "alpha = 0.8")
 knitr::kable(Metrics_Values, caption = "Metrics from each model")
 
 SSE_Values <- cbind.data.frame(SSE_fit1, SSE_fit2, SSE_fit3, SSE_fit4) 
-colnames(SSE_Values) <- c("alpha = 0.2", "alpha = 0.4", "alpha = 0.6", "alpha = 0.8")
+colnames(SSE_Values) <- c("alpha = 0.2", "alpha = 0.4", 
+                          "alpha = 0.6", "alpha = 0.8")
 rownames(SSE_Values) <- "SSE"
 knitr::kable(SSE_Values, caption = "SSE values of each model")
 
@@ -126,13 +129,17 @@ SSE_fit3_hc <- (accuracy(fit3_hc)[2]^2)*30
 fit4_hc <- ses(books[,2], initial = "simple", alpha = 0.8, h=4)
 SSE_fit4_hc <- (accuracy(fit4_hc)[2]^2)*30
 
-Metrics_Values_hc <- rbind.data.frame(accuracy(fit1_hc), accuracy(fit2_hc), accuracy(fit3_hc), 
+Metrics_Values_hc <- rbind.data.frame(accuracy(fit1_hc), 
+                                   accuracy(fit2_hc), accuracy(fit3_hc), 
                                    accuracy(fit4_hc)) 
-rownames(Metrics_Values_hc) <- c("alpha = 0.2", "alpha = 0.4", "alpha = 0.6", "alpha = 0.8")
+rownames(Metrics_Values_hc) <- c("alpha = 0.2", "alpha = 0.4", 
+                                 "alpha = 0.6", "alpha = 0.8")
 knitr::kable(Metrics_Values_hc, caption = "Metrics from each model")
 
-SSE_Values_hc <- cbind.data.frame(SSE_fit1_hc, SSE_fit2_hc, SSE_fit3_hc, SSE_fit4_hc) 
-colnames(SSE_Values_hc) <- c("alpha = 0.2", "alpha = 0.4", "alpha = 0.6", "alpha = 0.8")
+SSE_Values_hc <- cbind.data.frame(SSE_fit1_hc, SSE_fit2_hc, 
+                                  SSE_fit3_hc, SSE_fit4_hc) 
+colnames(SSE_Values_hc) <- c("alpha = 0.2", "alpha = 0.4", 
+                             "alpha = 0.6", "alpha = 0.8")
 rownames(SSE_Values_hc) <- "SSE"
 knitr::kable(SSE_Values_hc, caption = "SSE values of each model")
 
@@ -396,7 +403,8 @@ Based on the table below, it seems like ETS model had a better in-sample fit.
 
 ```{r compare_rmse, echo=F}
 ### Ch7.Q4.f)
-knitr::kable(rbind(acc_damp,acc_holt, acc_ets), caption = "Metrics")
+knitr::kable(rbind(acc_damp,acc_holt, acc_ets), 
+              caption = "Metrics")
 
 ```
 
@@ -718,12 +726,11 @@ aic4 <- fit4$aic
 
 aic <- cbind(aic1,aic2,aic4,aic4)
 rownames(aic) <- "AIC"
-colnames(aic) <- c("Arima(1,0,1)(1,1,1)","Arima(2,1,1)(2,1,1)","Arima(2,2,2)(2,2,1)", "Arima(1,0,2)(0,1,1) with drift")
+colnames(aic) <- c("Arima(1,0,1)(1,1,1)","Arima(2,1,1)(2,1,1)",
+                   "Arima(2,2,2)(2,2,1)", "Arima(1,0,2)(0,1,1) with drift")
 knitr::kable(aic, caption = "AIC Values")
 
 ```
-
-
 
 ### Ch8.Q8.e)
 
