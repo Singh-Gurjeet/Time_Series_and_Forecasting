@@ -3,26 +3,23 @@ title: "Predict_413_Sec55_Homework_2"
 author: "Singh, Gurjeet"
 date: "February 18, 2018"
 output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
   pdf_document:
     toc: yes
     toc_depth: 3
     fig_width: 9
     fig_height: 5
     fig_caption: true
-  html_document:
-    df_print: paged
-    toc: yes
-    toc_depth: '3'
 ---
-
-\pagebreak
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE )
 library(fpp)
 library(tidyverse)
 
 ```
-
 # Chapter 7
 ## Question 1
 ### Ch7.Q1.a)
@@ -39,10 +36,8 @@ autoplot(books) +
 
 ### Ch7.Q1.b)
 
-The Table 1 below shows the various matrics from each SES models with different alpha. It appears that as alpha increases, the error increases as well. Hence, alpha = 0.2 works best.
-
-The Table 2 shows the SSE for each models using different alpha.
-
+Table 1 below shows the various metrics from each SES models with different alpha. It appears that as alpha increases, the error increases as well. Hence, alpha = 0.2 works best.
+Table 2 shows the SSE for each models using different alpha.
 The figure below shows the four different sets of forecasts.
 
 ```{r simple, echo=F}
@@ -78,7 +73,6 @@ autolayer(fitted(fit3_pb), series = "alpha = 0.6") +
 
 ```
 
-
 ### Ch7.Q1.c)
 
 The summary statistic below is from SES model selected the optimal value of alpha. As we mentioned earlier that lower value of alpha gives us the best model, it is quite evident with the result that alpha = 0.1685 gave us the lowest RMSE and SSE.
@@ -93,7 +87,6 @@ rownames(SSE_fit5) <- "SSE Value"
 knitr::kable(SSE_fit5, caption = "SSE - SES Select")
 
 ```
-
 
 ### Ch7.Q1.d)
 
@@ -112,9 +105,9 @@ knitr::kable(SSE_fit6, caption = "SSE - Optimal Select")
 
 ### Ch7.Q1.e)
 
-We run SES model for Hardcover books. The Table 5 below shows the various matrics from each SES models with different alpha. When alpha = 0.4, the RMSE is the lowest. Hence, forecast works best.
+We run SES model for Hardcover books. The Table 5 below shows the various metrics from each SES models with different alpha. When alpha = 0.4, the RMSE is the lowest. Hence, forecast works best.
 
-The Table 6 shows the SSE for each models using different alpha. It is clear that alpha = 0.4 gives us the best forecast.
+Table 6 shows the SSE for each models using different alpha. It is clear that alpha = 0.4 gives us the best forecast.
 
 The figure below shows the four different sets of forecasts.
 
@@ -152,7 +145,6 @@ autolayer(fitted(fit3_hc), series = "alpha = 0.6") +
 
 ```
 
-
 The summary statistic below is from SES model selected the optimal value of alpha. The model selects the optimal value of alpha = 0.3283. Forecast values are lower than than the results in 2 for alpha = 0.4.
 
 ```{r part_C, echo=F}
@@ -165,7 +157,6 @@ rownames(SSE_fit5_hc) <- "SSE Value"
 knitr::kable(SSE_fit5_hc, caption = "SSE - SES Select")
 
 ```
-
 
 The summary statistic below shows that with the initial = "optimal" option, we get the same alpha and initial states. There's no difference from SES selecting an optimal value without the option and after setting the optimal option.
 
@@ -183,7 +174,7 @@ knitr::kable(SSE_fit6_hc, caption = "SSE - Optimal Select")
 ## Question 2
 ### Ch7.Q2.a)
 
-Table 9 shows the SSE value of paperback and hardback series obtained using Holt's linear method. These measures are much better than any of the SSE values obtained using SES. Earlier, we had doubts that data may have some trend behaviour. The result confirms that there's definitely trend behaviour present in the data. Hence, simple exponential smoothing may not be the best option for this kind of data.
+Table 9 shows the SSE value of paperback and hardback series obtained using Holt's linear method. These measures are much better than any of the SSE values obtained using SES. Earlier, we had doubts that data may have some trend behavior. The result confirms that there's definitely trend behavior present in the data. Hence, simple exponential smoothing may not be the best option for this kind of data.
 
 ```{r holtsTrend, echo=F}
 ### Ch7.Q2.a)
@@ -201,9 +192,11 @@ knitr::kable(cbind(SSE_holts,SSE_holts_2) , caption = "SSE Values")
 
 ```
 
+\pagebreak
+
 ### Ch7.Q2.b)
 
-The figure below shows the forecast of Simple exponential smoothing and Holt's linear methods for paperback books. It appears that Holt's linear method performed better. Forecast from SES seems to be flat.
+The figure below shows the forecast of Simple exponential smoothing and Holt's linear methods for paperback books. It appears that Holt's linear method performed better. The forecast from SES seems to be flat.
 
 ```{r compare_forecast, echo=F}
 ### Ch7.Q2.b)
@@ -213,6 +206,7 @@ autoplot(books[,1]) +
   ggtitle("Forecast comparison SES vs Holt's for paperback series") +
   xlab("Days") +
   ylab("Books")
+
 ```
 
 The figure below shows the forecast of Simple exponential smoothing and Holt's linear methods for hardcover books. Again, it appears that Holt's linear method performed better.
@@ -231,7 +225,6 @@ autoplot(books[,2]) +
 ### Ch7.Q2.c)
 
 The figures below shows the 95% prediction interval for the forecase for each series using Holt's and Simple Exponential Smoothing methods. Both the methods are forecasting within the prediction interval.
-
 
 ```{r pred_interval, echo=F}
 ### Ch7.Q2.c)
@@ -253,8 +246,7 @@ autoplot(fit2_holts) +
 ## Question 3
 ### Ch7.Q3)
 
-The table below give the metrics from each model. It shows that model with exponential trend gave the best RSME of 26.386. The figure below shows the forecast of each model. Again, it is quite evident that exponential trend forecase seems to be a lot better as compared to others.
-
+The table below gives the metrics from each model. It shows that model with exponential trend gave the best RSME of 26.386. The figure below shows the forecast of each model. Again, it is quite evident that exponential trend forecast seems to be a lot better as compared to others.
 
 ```{r importdata, echo=F}
 ### Ch7.Q3)
@@ -301,7 +293,7 @@ eggs %>%
 ## Question 4
 ### Ch7.Q4.a)
 
-The figure below shows the plot of the quarterly UK passenger vehicle production from January 1977 to January 2005.The data in the figure below display seasonality as well as trend behaviour.
+The figure below shows the plot of the quarterly UK passenger vehicle production from January 1977 to January 2005.The data in the figure below display seasonality as well as trend behavior.
 
 ```{r data_import_4, echo=F}
 ### Ch7.Q4.a)
@@ -314,10 +306,9 @@ autoplot(ukcars) +
 
 ```
 
-
 ### Ch7.Q4.b)
 
-The figure below shows trend-cycle and seasonal indices of the STL decomposition. We can see the increasing trend from the beginning of 1980 to 1998. Earlier we mentioned that there are some seasonality in the data. Here, we can clearly see the seasonal effects in the third panel. The large gray bar in the third panel shows that variation in the seasonal component is small as compared to the variation in the data.
+The figure below shows trend-cycle and seasonal indices of the STL decomposition. We can see the increasing trend from the beginning of 1980 to 1998. Earlier we mentioned that there is some seasonality in the data. Here, we can clearly see the seasonal effects in the third panel. The large gray bar in the third panel shows that variation in the seasonal component is small as compared to the variation in the data.
 
 ```{r stlDecom, echo=F, fig.height=7, fig.width=6}
 ### Ch7.Q4.b)
@@ -362,7 +353,6 @@ knitr::kable(rbind(acc_damp, acc_reseason), caption = "Metrics")
 
 ```
 
-
 ### Ch7.Q4.d)
 
 The table below shows the metrics from the Holt's linear method applied to the seasonally adjusted data and reseasonalized forecast.
@@ -382,6 +372,7 @@ knitr::kable(rbind(acc_holt, acc_reseason_ln), caption = "Metrics")
 
 ```
 
+\pagebreak
 
 ### Ch7.Q4.e)
 
@@ -411,15 +402,16 @@ knitr::kable(rbind(acc_damp,acc_holt, acc_ets), caption = "Metrics")
 
 ### Ch7.Q4.e)
 
-The forecasts generated Holt's linear method approach display a constant trend (increasing or decreasing) indefinitely into the future. Generally, this method over-forecast for longer forecast horizons. However, in our case, we are only forecasting for 4 additional days. Therefore, our forecast doesn't seem to over-forecast and is pretty close to the forecast of other methods. The forecast generated by additive damped trend seems to perform better over Holt's linear method. We got a better RMSE. However, in this cast, ETS method with additive seasonal component and additive error seems to perform the best.
+The forecasts generated Holt's linear method approach display a constant trend (increasing or decreasing) indefinitely into the future. Generally, this method over-forecast for longer forecast horizons. However, in our case, we are only forecasting for 4 additional days. Therefore, our forecast doesn't seem to over-forecast and is pretty close to the forecast of other methods. The forecast generated by additive damped trend seems to perform better over Holt's linear method. We got a better RMSE. However, in this case, ETS method with additive seasonal component and additive error seems to perform the best.
 
 # Chapter 8
 ## Question 5
 ### Ch8.Q5.a&b)
 
-THe plot below show the time series plot of the data generated from an AR(1) model with Phi = 0.6 and sigma squared = 1.
+The plot below shows the time series plot of the data generated from an AR(1) model with Phi = 0.6 and sigma squared = 1.
 
 ```{r simpleARIMA, echo=F}
+### Ch8.Q5.a&b)
 y <- ts(numeric(100))
 e <- rnorm(100)
 for(i in 2:100){
@@ -428,11 +420,13 @@ for(i in 2:100){
 autoplot(y) +
   ggtitle("Time Series Plot when Phi = 0.6, sigma square = 1") +
     theme_bw()
+
 ```
 
-The plot below show the time series plot of the data generated from an AR(1) model with Phi = 0 and sigma squared = 1. By changing the Phi, it appears that the seasonal effect got more closer.
+The plot below shows the time series plot of the data generated from an AR(1) model with Phi = 0 and sigma squared = 1. By changing the Phi, it appears that the seasonal effect got closer.
 
 ```{r simpleARIMA2, echo=F}
+### Ch8.Q5.a&b)
 y <- ts(numeric(100))
 e <- rnorm(100)
 for(i in 2:100){
@@ -441,15 +435,17 @@ for(i in 2:100){
 autoplot(y) +
   ggtitle("Time Series Plot when Phi = 0, sigma square = 1") +
   theme_bw()
+
 ```
 
 ### Ch8.Q5.c&d)
 
-THe plot below show the time series plot of the data generated from an MA(1) model with Phi = 0.6 and sigma squared = 1.
+The plot below shows the time series plot of the data generated from an MA(1) model with Phi = 0.6 and sigma squared = 1.
 
-The second plot below show the time series plot of the data generated from an MA(1) model with Phi = 0 and sigma squared = 1. By changing the Phi, it appears that the seasonal effect got more closer.
+The second plot below shows the time series plot of the data generated from an MA(1) model with Phi = 0 and sigma squared = 1. By changing the Phi, it appears that the seasonal effect got closer.
 
 ```{r MA1, echo=F}
+### Ch8.Q5.c&d)
 y <- ts(numeric(100))
 e <- rnorm(100)
 for(i in 2:100){
@@ -467,22 +463,23 @@ for(i in 2:100){
 autoplot(y) +
   ggtitle("Time Series Plot of MA(1) when Phi = 0, sigma square = 1") +
   theme_bw()
-```
 
+```
 
 ### Ch8.Q5.e,f,&g)
 
-The top plot below show the time series plot of the data generated from an ARMA(1,1) model with Phi = 0.6 and Theta = 0.6 and sigma sqr = 1. The second plot below show the time series plot of the data generated from an AR(2) model with Phi = -0.8 and Phi = 0.3 and sigma sqr = 1. It appears that the second plot is a non-stationary series while the first one seem to be a stationary series.
-
+The top plot below shows the time series plot of the data generated from an ARMA(1,1) model with Phi = 0.6 and Theta = 0.6 and sigma sqr = 1. The second plot below shows the time series plot of the data generated from an AR(2) model with Phi = -0.8 and Phi = 0.3 and sigma sqr = 1. It appears that the second plot is a non-stationary series while the first one seems to be a stationary series.
 
 ```{r ARMA11, echo=F}
+### Ch8.Q5.e,f,&g)
 y <- ts(numeric(100))
 e <- rnorm(100)
 for(i in 2:100){
   y[i] <-  0.6*y[i-1] + 0.6*e[i-1] + e[i]
 }
 P1 <- autoplot(y) +
-  ggtitle("Time Series Plot of ARMA(1,1) when Phi = 0.6 and Theta=0.6 and sigma sqr=1") +
+      ggtitle(paste0("Time Series Plot of ARMA(1,1) when", 
+                "Phi = 0.6 and Theta=0.6 and sigma sqr=1")) +
   theme_bw()
 
 y <- ts(numeric(100))
@@ -491,21 +488,21 @@ for(i in 3:100){
   y[i] <- y[i-1]*(-0.8) + 0.3*y[i-2] + e[i]
 }
 P2 <- autoplot(y) +
-  ggtitle("Time Series Plot of AR(2) when Phi = -0.8 and Phi = 0.3  and sigma sqr=1") +
+  ggtitle(paste0("Time Series Plot of AR(2) when",
+            "Phi = -0.8 and Phi = 0.3  and sigma sqr=1")) +
   theme_bw()
-
 gridExtra::grid.arrange(P1, P2, nrow=2)
+
 ```
 
 ## Question 6
 ### Ch8.Q6.a)
 
-The figure below shows the time series plot of the number of wonmen murdered each year in the US.
+The figure below shows the time series plot of the number of women murdered each year in the US.
 
 ```{r ARIMA1, echo=F}
+### Ch8.Q6.a)
 data("wmurders")
-#View(wmurders)
-
 autoplot(wmurders) +
   ggtitle("Number of women murdered each year in the US") +
   theme_bw() +
@@ -515,18 +512,17 @@ autoplot(wmurders) +
 
 The figure below shows the ACF and PACF plots for the number of women murdered each year in the US. In the figure below, it appears that the data follow an ARIMA(p,d,0) model because the plot of the differenced data show the ACF is exponentially decaying and there is a significant spike at lag p in PACF, but none beyond lag p. Therefore, in ACF plot, there are nine (9) spikes decreasing with the lag and then no significant spikes thereafter. Hence, the pattern in the first nine spikes is what we would expect from an ARIMA(9,0,0) as the ACF tends to decay exponentially.
 
-
 ```{r ARIMA_ACF_PACF, echo=F}
+### Ch8.Q6.a)
 gg1 <- ggAcf(wmurders, main="ACF plot")
 gg2 <- ggPacf(wmurders, main="PACF plot")
-
 gridExtra::grid.arrange(gg1,gg2,nrow = 2)
+
 ```
 
 ### Ch8.Q6.b)
 
-Based on the results from ACF and PACF plots, it doesn't seem to be a need for constant in the model because the long term forecasts will not go to the mean of the data, follow a straight line, or follow a quadratic trend.
-
+Based on the results from ACF and PACF plots, it doesn't seem to be a need for constant in the model because the long-term forecasts will not go to the mean of the data, follow a straight line, or follow a quadratic trend.
 
 ### Ch8.Q6.c)
 
@@ -546,10 +542,9 @@ The ARIMA(9,0,0) model in terms of the backshift operator is shown below:
 
 ((1 - B)^d)*Yt = mu + ((1 - theta0(B))/(1 - phi1(B) - ... - phi9(B)^9))at \newline
 
-
 ### Ch8.Q6.d)
 
-We create three models, auto.arima, ARIMA(9,0,0) - our model, and ARIMA(9,1,0). Two of the models created is to compare with our model. Below is the summary from each model. When comparing the RMSE for each model, it seems like our ARIMA(9,0,0) model performed the best.
+We create three models, auto.arima, ARIMA(9,0,0) - our model, and ARIMA(9,1,0). Two of the models created is to compare with our model. Below is the summary of each model. When comparing the RMSE for each model, it seems like our ARIMA(9,0,0) model performed the best.
 
 ```{r ARIMA_fit, echo=F}
 ### Ch8.Q6.d)
@@ -559,9 +554,10 @@ summary(Arima(wmurders, order = c(9,1,0)))
 
 ```
 
-The figure below shows the residuals from ARIMA(9,0,0) model with non-zero mean. In the ACF plot, all the spikes are now within the significance limits, and so the residual apprea to be white noise. Therefore, the model is satisfactory.
+The figure below shows the residuals from ARIMA(9,0,0) model with non-zero mean. In the ACF plot, all the spikes are now within the significance limits, and so the residual appears to be white noise. Therefore, the model is satisfactory.
 
 ```{r ARIMA_res, echo=F}
+### Ch8.Q6.d)
 checkresiduals(arima(wmurders, order = c(9,0,0)))
 
 ```
@@ -570,17 +566,16 @@ checkresiduals(arima(wmurders, order = c(9,0,0)))
 The figure below shows the forecast for the next three years with the 80% and 95% prediction interval.
 
 ```{r ARIMA_fcast, echo=F}
+### Ch8.Q6.e&f)
 fcast <- forecast(arima(wmurders, order = c(9,0,0)), h=3)
-
 autoplot(fcast) +
   theme_bw()
+
 ```
 
 ### Ch8.Q6.g)
 
 In section Ch8.Q6.d), I have compared auto.arima with our model. The auto.arima do not give us the same model. The model produced by auto.arima is ARIMA(1,2,1) which did not perform better than our model. The RMSE is little higher than our model. Therefore, ARIMA(9,0,0) model is the better model.
-
-
 
 ## Question 7
 ### Ch8.Q7.a)
@@ -588,25 +583,29 @@ In section Ch8.Q6.d), I have compared auto.arima with our model. The auto.arima 
 The figure below shows the quarterly number of international tourists to Australia for the period 1999-2010. The data follows the seasonal patterns and have the increasing trend.
 
 ```{r data_AUS, echo=F}
+### Ch8.Q7.a)
 data("austourists")
 autoplot(austourists) +
-  ggtitle("Quarterly number of international tourists to Australia for the period 1999-2010") +
+  ggtitle(paste0("Quarterly number of international",
+                  "tourists to Australia for the",
+                  "period 1999-2010")) +
   theme_bw() +
   xlab("Year")
+
 ```
 
 ### Ch8.Q7.b&c)
 
-The figure below shows the ACF and PACF plots for the quarterly number of international tourists to Australia for the period 1999-2010. In the figure below, ACF plot shows that the lag is every fourth term because there are spikes at lag 4, lag 8, lag 12, and lag 16 and is exponentially decaying in the deasonal lags of the ACF. Hence, the data will follow an ARIMA(0,0,0)(1,0,0)4 model.
+The figure below shows the ACF and PACF plots for the quarterly number of international tourists to Australia for the period 1999-2010. In the figure below, ACF plot shows that the lag is every fourth term because there are spikes at lag 4, lag 8, lag 12, and lag 16 and is exponentially decaying in the seasonal lags of the ACF. Hence, the data will follow an ARIMA(0,0,0)(1,0,0)4 model.
 
 data follow an ARIMA(p,d,0) model because the plot of the differenced data show the ACF is exponentially decaying and there is a significant spike at lag p in PACF, but none beyond lag p. Therefore, in ACF plot, there are nine (9) spikes decreasing with the lag and then no significant spikes thereafter. Hence, the pattern in the first nine spikes is what we would expect from an ARIMA(9,0,0) as the ACF tends to decay exponentially.
 
-
 ```{r ACF_PACF, echo=F}
+### Ch8.Q7.b&c)
 gg1 <- ggAcf(austourists, main="ACF plot")
 gg2 <- ggPacf(austourists, main="PACF plot")
-
 gridExtra::grid.arrange(gg1,gg2,nrow = 2)
+
 ```
 
 ### Ch8.Q7.d)
@@ -614,23 +613,25 @@ gridExtra::grid.arrange(gg1,gg2,nrow = 2)
 The figure below shows the seasonally differenced data along with ACF and PACF plots. There is a significant spike at lag 1 in the ACF suggests a non-seasonal MA(1) component, and the significant spike at lag 4 in the ACF suggests a seasonal MA(1) component. Therefore, we begin with an ARIMA(0,1,1)(0,1,1)[4] model.
 
 ```{r plotseas, echo=F}
-
+### Ch8.Q7.d)
 austourists %>% 
     diff(lag=4) %>%
     ggtsdisplay()
-```
 
+```
 
 ### Ch8.Q7.e)
 
 The summary below shows the summaries of auto.arima and ARIMA(0,1,1)(0,1,1)[4]. The auto.arima gave us the model ARIMA(1,0,0)(1,1,0)[4] with drift. The auto.arima model is the better model for this data because AIC and RMSE are lower than the ARIMA(0,1,1)(0,1,1)[4] model.
 
 ```{r autoARima, echo=F}
+### Ch8.Q7.e)
 atArm <- auto.arima(austourists)
-fitarm <- Arima(austourists, order = c(0,1,1), seasonal = list(order = c(0,1,1), period = 4))
-# fitarm <- Arima(austourists, order = c(0,1,1), seasonal = list(order = c(0,1,1)))
+fitarm <- Arima(austourists, order = c(0,1,1), 
+                seasonal = list(order = c(0,1,1), period = 4))
 summary(atArm)
 summary(fitarm)
+
 ```
 
 ### Ch8.Q7.f)
@@ -655,16 +656,14 @@ Therefore, our model ARIMA(1,0,0)(1,1,0)[4] can we written as:
 
 (1-B^4)Yt = mu + ((1 - theta1(B))(1-thetas1(B^4) - thetas2 0^B^8))/(1 - phi(B) (1 - phis 1^(B^4)))at
 
-
 ## Question 8
 ### Ch8.Q8.a)
 
 In the figure below, we see the increasing trend which means there is an increase in the electricity generation over time. The original data also show the strong seasonal component.
 
-
 ```{r data_usmelec, echo=F}
+### Ch8.Q8.a)
 data("usmelec")
-
   autoplot(usmelec, series="Data") +
   autolayer(ma(usmelec,12), series="12-MA") +
   xlab("Year") + ylab("Billions of kilowatt hours (kWh)") +
@@ -672,24 +671,25 @@ data("usmelec")
   scale_colour_manual(values=c("Data"="grey50","12-MA"="red"),
                      breaks=c("Data","12-MA"))
 
-
 ```
 
 ### Ch8.Q8.b)
 
-In the previous section, we noticed variation in the data. Therefore, transformation will be useful. We will use the Box-Cox transformation.
+In the previous section, we noticed the variation in the data. Therefore, the transformation will be useful. We will use the Box-Cox transformation.
 
 ```{r trans, echo=F}
+### Ch8.Q8.b)
 lambda <- BoxCox.lambda(usmelec)
 autoplot(BoxCox(usmelec,lambda))
+
 ```
 
 ### Ch8.Q8.c)
 
-The data does not appear to be stationary. The first figure below shows the seasonal difference. This figure shows that the data still appear to be non-stationary. Therefore, we take an additional first difference, shown in the next figure. It seems to me that the data now appears to be stationary. However, there are significant spikes at various lags.
+The data does not appear to be stationary. The first figure below shows the seasonal difference. This figure shows that the data still appears to be non-stationary. Therefore, we take an additional first difference, shown in the next figure. It seems to me that the data now appears to be stationary. However, there are significant spikes at various lags.
 
 ```{r plotStationary, echo=F}
-
+### Ch8.Q8.c)
 usmelec %>% 
     diff(lag=12) %>%
     ggtsdisplay() 
@@ -698,6 +698,7 @@ usmelec %>%
     diff(lag=12) %>%
     diff() %>% 
     ggtsdisplay()
+
 ```
 
 ### Ch8.Q8.d)
@@ -705,6 +706,7 @@ usmelec %>%
 We created four ARIMA models (including one auto.arima model). According to the AIC values, our best model is ARIMA(2,1,1)(2,1,1).
 
 ```{r ARIMA_mods, echo=F}
+### Ch8.Q8.d)
 fit1 <- Arima(usmelec, order = c(1,0,1), seasonal = c(1,1,1))
 aic1 <- fit1$aic
 fit2 <- Arima(usmelec, order = c(2,1,1), seasonal = c(2,1,1))
@@ -728,8 +730,9 @@ knitr::kable(aic, caption = "AIC Values")
 The figure below shows the ARIMA model selected and estimated. The ARIMA model captures all the dynamics in the data as the residual seems to be white noise. The residuals are also distributed normally. 
 
 ```{r estimate_param, echo=F}
-
+### Ch8.Q8.e)
 checkresiduals(fit2)
+
 ```
 
 ### Ch8.Q8.f)
@@ -737,6 +740,7 @@ checkresiduals(fit2)
 The figure below shows the accuracy of the forecast and the 15 years forecasted plot.
 
 ```{r fcast15, echo=F}
+### Ch8.Q8.f)
 elect <- read_csv("electricity-overview.csv")
 colnames(elect) <- c("Month", "Electricity")
 elect_ts <- ts(elect$Electricity, start = c(1973,1), frequency = 12)
@@ -746,7 +750,9 @@ knitr::kable(accuracy(fcast, elect_ts), caption = "Accuracy")
 autoplot(fcast)
 ```
 
+### Ch8.Q8.g)
 
+In my opinion, the next two to five years should be sufficiently accurate. Anything over that causes the confidence intervals to increase and the actual values could be far from the reality.
 
 ## Appendix I: R Code
 
