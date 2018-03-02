@@ -116,4 +116,3 @@ RMarkdown code is available on my GitHub page (https://github.com/Singh-Gurjeet)
 ```{r show_code, ref.label = knitr::all_labels(), echo=TRUE, eval=F}
 
 ```
-
