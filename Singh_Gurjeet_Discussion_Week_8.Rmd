@@ -1,0 +1,119 @@
+---
+title: "Predict_413_Discussion_Week_8"
+author: "Singh, Gurjeet"
+date: "March 01, 2018"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+    fig_width: 9
+    fig_height: 5
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    fig_width: 9
+    fig_height: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+
+```{r load_libraries, echo=F}
+
+library(tidyverse)
+library(fpp)
+library(quantmod) # use for gathering and charting Stock data
+library(vars)
+options(scipen = 999)
+```
+
+\pagebreak
+
+## 1. Introduction
+
+For this week's discussion, we build the VAR model to investigate the relationships between the closing price of two stocks. 
+
+## 2. Data
+
+For this week's discussion, I chose ACN (Accenture) and IBM as my two stocks. Since they are competitors, it would be nice to compare their stocks.
+
+The figure below shows the plots of Accenture and IBM stocks' closing price. Closing Price chart of Accenture shows that the stock price has been increasing over the years. However, IBM stock price has decreased over the five years.
+
+```{r Import_Data, echo=F}
+
+#Download the Accenture data from Google Finance.
+A <- getSymbols("ACN", src="google", return.class = "xts", warnings = F)
+B <- getSymbols("IBM", src="google", return.class = "xts", warnings = F)
+
+#Extract only closing price of the stock.
+ACN_Close <- ACN$ACN.Close # Get the closing rate
+IBM_Close <- IBM$IBM.Close # Get the closing rate
+
+#Extract only closing price of the stock.
+#filter data for 5 years only
+ACN_Close_5yr <- ACN_Close["2013-03-01/"]
+IBM_Close_5yr <- IBM_Close["2013-03-01/"]
+
+p1 <- autoplot(ACN_Close_5yr) + ggtitle("Accenture Stock Closing Price") +
+        xlab("Year")+ ylab("Closing Price $") + theme_bw()
+p2 <-autoplot(IBM_Close_5yr) + ggtitle("IBM Stock Closing Price") +
+        xlab("Year")+ ylab("Closing Price $") + theme_bw()
+gridExtra::grid.arrange(p1,p2, layout_matrix = rbind(1,2))
+
+stocks <- cbind(ACN_Close_5yr, IBM_Close_5yr )
+```
+
+## 3. Model
+
+We first check the appropriate level of lags. The table below shows the lag selected by each of the information criteria. There is some discrepancy between a VAR(2) selected by the AIC and a VAR(1) selected by BIC. The difference is not much. Also, this is not unusual. We first fit a VAR(1), selected by the BIC, and test the residuals for correlation using the Portmanteau test. Next, we fit a VAR(2), selected by the AIC, and test the residuals for correlation using the Portmanteau test as well.
+
+```{r VARSelect, echo=F}
+
+knitr::kable(t(VARselect(stocks, type = "const")$selection), 
+             caption = "Information Criteria")
+```
+
+The model below is estimated using VAR(1). We then tested for autocorrelation using a Portmanteau test. The null hypothesis of no autocorrelation cannot be rejected because the p-value of 0.07324 is greater than the significance level of 0.05 but with not a lot.
+
+```{r ModelVar1, echo=F}
+
+var1 <- VAR(stocks, p = 1, type = "const")
+serial.test(var1, lags.pt=10, type="PT.asymptotic")
+```
+
+The model below is estimated using VAR(2). We then again tested for autocorrelation using a Portmanteau test. The null hypothesis of no autocorrelation cannot be rejected because the p-value of 0.1374 is greater than the significance level of 0.05. This model seems to better than the one before. Therefore, we will select this model as our final model for forecasting.
+
+```{r ModelVar2, echo=F}
+
+var2 <- VAR(as.ts(stocks), p = 2, type = "const")
+serial.test(var2, lags.pt=10, type="PT.asymptotic")
+```
+
+
+## 4. Forecast
+
+The figure below shows the forecast of ACN and IBM stocks for next 120 days. ACN stock price is expected to increase gradually whereas IBM stock price is expected to decrease.
+
+```{r forecast, echo=F}
+
+autoplot(forecast(var2, h=120)) +
+  xlab("Days") +
+  ylab("Price $") +
+  theme_bw()
+```
+
+## 5. Conclusion
+
+We were hoping to see some correlation in the stocks since both are competitors. However, there wasn't any at all. Actually, it makes sense now that there isn't any correlation because IBM not only focuses on consulting services but manufacture computer hardware, middleware, and software. Therefore, IBM stock price is affected by other factors as well.
+
+***
+RMarkdown code is available on my GitHub page (https://github.com/Singh-Gurjeet) in the Time Series and Forecasting repository.
+
+## 6. Appendix I: R Code
+```{r show_code, ref.label = knitr::all_labels(), echo=TRUE, eval=F}
+
+```
+
